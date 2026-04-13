@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نموذج استقبال العملاء</title>
+<title> Tasksup | نموذج استقبال العملاء </title>
+<meta name="description" content="نموذج استقبال وتواصل العملاء لخدمات تحليل البيانات والإعلانات الرقمية.">
+<meta name="keywords" content="تحليل بيانات, إعلانات رقمية, استقبال عملاء, تسويق إلكتروني, Tasksup">
+<link rel="icon" type="image/png" href="logo.png.png">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f5f5f5; color: #1a1a1a; direction: rtl; }
@@ -294,12 +297,11 @@
       `<div class="sum-row"><span class="sum-key">${k}</span><span class="sum-val">${v}</span></div>`
     ).join('');
 
-    // إرسال البيانات إلى n8n Webhook
-    // قم باستبدال الرابط أدناه برابط الـ Webhook الخاص بك من n8n
+    // إرسال البيانات إلى n8n Webhook (معطل حالياً)
+    /*
     const webhookUrl = 'https://YOUR_N8N_WEBHOOK_URL_HERE';
     
     try {
-      // إظهار حالة التحميل على الزر
       const btn = document.getElementById('n4');
       const originalText = btn.innerText;
       btn.innerText = 'جاري الإرسال...';
@@ -316,16 +318,16 @@
       btn.innerText = originalText;
     } catch (error) {
       console.error('Error sending data:', error);
-      // في الحالتين سنكمل للخطوة التالية لكي لا نوقف تجربة العميل
     }
+    */
 
     next(5);
     document.getElementById('d4').className = 'dot done';
   }
 
   function openWA() {
-    // ← غيّر الرقم هنا برقم واتساب تبعك (مع كود الدولة بدون +)
-    const phone = '970XXXXXXXXX';
+    // الرقم الخاص بالواتساب
+    const phone = '972594062460';
     const msg = encodeURIComponent(
       `مرحباً، أنا ${data.name}\n` +
       `نوع مشروعي: ${data.type}\n` +

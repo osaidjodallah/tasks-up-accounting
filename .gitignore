@@ -1,0 +1,22 @@
+# Dependency directories
+node_modules/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# Editor folders
+.vscode/
+.idea/
+
+# Distribution
+dist/
+build/
