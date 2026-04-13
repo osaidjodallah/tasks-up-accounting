@@ -2,7 +2,7 @@
   "name": "Tasksup",
   "short_name": "Tasksup",
   "description": "نظام إدارة الأعمال والمتاجر",
-  "start_url": "./accounting.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
