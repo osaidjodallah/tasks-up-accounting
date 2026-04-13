@@ -2133,21 +2133,13 @@ function getSession() { const s = sessionStorage.getItem('mkt_sess_v2'); return 
 function setSession(s) { sessionStorage.setItem('mkt_sess_v2', JSON.stringify(s)); }
 function clearSession() { sessionStorage.removeItem('mkt_sess_v2'); }
 
-async function initAuthIfNeeded() {
-  let auth = loadAuth();
-  if (!auth) {
-    // Try loading from Supabase first
-    const remote = await supabaseGet('mkt_auth_v2');
-    if (remote) {
-      auth = remote;
-      localStorage.setItem('mkt_auth_v2', JSON.stringify(auth));
-    } else {
-      const hash = await hashPwd(SA_INIT_PASS);
-      auth = { superAdmin: { email: SA_EMAIL, hash }, clients: [] };
-      saveAuth(auth);
-    }
+async function syncAuth() {
+  const remote = await supabaseGet('mkt_auth_v2');
+  if (remote) {
+    localStorage.setItem('mkt_auth_v2', JSON.stringify(remote));
+    return remote;
   }
-  return auth;
+  return loadAuth();
 }
 
 // ---- LOGIN ----
@@ -2157,7 +2149,14 @@ async function doLogin() {
   const btn   = document.getElementById('login-btn');
   if (!email || !pwd) { showLoginError('أدخل البريد الإلكتروني وكلمة المرور'); return; }
   btn.disabled = true; btn.textContent = 'جاري التحقق...';
-  const auth = await initAuthIfNeeded();
+  
+  // ALWAYS sync from Supabase before login to ensure we have the latest accounts
+  const auth = await syncAuth();
+  if (!auth) {
+    btn.disabled = false; btn.textContent = 'تسجيل الدخول';
+    showLoginError('تعذر الاتصال بقاعدة البيانات. حاول مجدداً.'); return;
+  }
+  
   const hash = await hashPwd(pwd);
 
   // 1. Super Admin
@@ -2267,8 +2266,39 @@ const EMAILJS_DEFAULTS = {
   serviceId:  'service_rx6ond2',
   templateId: 'template_rrda9pk',
   publicKey:  'IMRFWSyOMFgmthprM',
-  appUrl:     ''
+  appUrl:     'https://tasks-up.com'
 };
+
+async function sendTasksupEmail(toEmail, toName, messageBody, actionLink, actionText) {
+  const cfg = await getEmailJSConfig();
+  if (!cfg.serviceId || !cfg.templateId || !cfg.publicKey) {
+    console.warn('EmailJS not fully configured');
+    return false;
+  }
+  if (typeof emailjs === 'undefined') {
+    console.error('EmailJS library not loaded');
+    return false;
+  }
+  try {
+    await emailjs.send(
+      cfg.serviceId,
+      cfg.templateId,
+      {
+        to_email:     toEmail,
+        user_name:    toName,
+        message_body: messageBody,
+        action_link:  actionLink,
+        action_text:  actionText,
+        app_name:     'Tasksup'
+      },
+      { publicKey: cfg.publicKey }
+    );
+    return true;
+  } catch (e) {
+    console.error('Email send failed:', e);
+    return false;
+  }
+}
 
 async function getEmailJSConfig() {
   const s = localStorage.getItem('mkt_emailjs_config');
@@ -2323,7 +2353,7 @@ async function requestPasswordReset() {
   btn.disabled = true; btn.textContent = 'جاري الإرسال...';
   statusEl.style.display = 'none';
 
-  await initAuthIfNeeded();
+  const auth = await syncAuth();
   const account = getForgetPasswordAccount(email);
   if (!account) {
     btn.disabled = false; btn.textContent = 'إرسال الرابط';
@@ -2333,47 +2363,25 @@ async function requestPasswordReset() {
   }
 
   const cfg = await getEmailJSConfig();
-  if (!cfg.serviceId || !cfg.templateId || !cfg.publicKey) {
-    btn.disabled = false; btn.textContent = 'إرسال الرابط';
-    statusEl.style.cssText = 'display:block;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-top:8px;';
-    statusEl.textContent = 'خدمة الإيميل غير مُعدّة بعد. يرجى التواصل مع المسؤول.';
-    return;
-  }
-
-  // Build self-contained signed token (no storage needed — all info is in the URL)
   const token = await buildResetToken(email, account.hash);
-  const appUrl = cfg.appUrl || window.location.href.split('?')[0];
-  const resetLink = `${appUrl}?reset=${token}`;
+  const resetLink = `${cfg.appUrl}?reset=${token}`;
 
-  if (typeof emailjs === 'undefined') {
-    btn.disabled = false; btn.textContent = 'إرسال الرابط';
-    statusEl.style.cssText = 'display:block;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-top:8px;';
-    statusEl.textContent = 'مكتبة EmailJS لم تُحمَّل. تحقق من الاتصال بالإنترنت.';
-    return;
-  }
-  try {
-    const result = await emailjs.send(
-      cfg.serviceId,
-      cfg.templateId,
-      {
-        to_email:    email,
-        user_name:   account.name || email,
-        reset_link:  resetLink,
-        app_name:    'Tasksup',
-        expiry_time: 'ساعة واحدة'
-      },
-      { publicKey: cfg.publicKey }
-    );
-    console.log('EmailJS result:', result);
-    statusEl.style.cssText = 'display:block;background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;padding:10px 14px;border-radius:8px;font-size:13px;margin-top:8px;';
+  const success = await sendTasksupEmail(
+    email,
+    account.name || email,
+    'لقد طلبت إعادة تعيين كلمة المرور لحسابك في Tasksup. يرجى الضغط على الرابط أدناه للمتابعة. إذا لم تطلب ذلك، يمكنك تجاهل هذا الإيميل.',
+    resetLink,
+    'إعادة تعيين كلمة المرور'
+  );
+
+  if (success) {
+    statusEl.style.cssText = 'display:block;background:#d1fae5;border:1 solid #6ee7b7;color:#065f46;padding:10px 14px;border-radius:8px;font-size:13px;margin-top:8px;';
     statusEl.textContent = `✓ تم إرسال رابط إعادة التعيين إلى ${email}. صالح لمدة ساعة.`;
     btn.textContent = 'تم الإرسال ✓';
-  } catch(e) {
-    console.error('EmailJS error full:', e);
+  } else {
     btn.disabled = false; btn.textContent = 'إرسال الرابط';
-    const errMsg = e?.text || e?.message || JSON.stringify(e) || 'خطأ غير معروف';
     statusEl.style.cssText = 'display:block;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-top:8px;';
-    statusEl.textContent = 'فشل إرسال الإيميل: ' + errMsg;
+    statusEl.textContent = 'فشل إرسال الإيميل. تحقق من إعدادات EmailJS أو الاتصال بالإنترنت.';
   }
 }
 
@@ -2510,7 +2518,7 @@ async function createClientAccount() {
   const note   = document.getElementById('cc-note').value.trim();
   if (!name || !email || !pwd) return alert('أدخل الاسم والإيميل وكلمة المرور');
   if (stores + svcs === 0) return alert('حدد على الأقل حساباً واحداً (متجر أو خدمات)');
-  const auth = loadAuth();
+  const auth = await syncAuth();
   if ((auth.clients||[]).find(c => c.email.toLowerCase() === email)) return alert('هذا البريد الإلكتروني موجود مسبقاً');
   const hash = await hashPwd(pwd);
   const clientId = 'cl_' + Date.now();
@@ -2521,6 +2529,17 @@ async function createClientAccount() {
   if (!auth.clients) auth.clients = [];
   auth.clients.push(client);
   saveAuth(auth);
+  
+  // Send Onboarding Email
+  const cfg = await getEmailJSConfig();
+  sendTasksupEmail(
+    email,
+    name,
+    `أهلاً بك في Tasksup للمحاسبة! تم تفعيل اشتراكك بنجاح. نوع الحساب: ${stores} متجر و ${svcs} خدمات. يمكنك الدخول الآن باستخدام إيميلك وكلمة المرور التي اخترناها لك.`,
+    cfg.appUrl,
+    'دخول النظام'
+  );
+
   ['cc-name','cc-email','cc-password','cc-note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('cc-stores').value = '0';
   document.getElementById('cc-services').value = '1';
@@ -2827,7 +2846,7 @@ async function addEmployee() {
   const pwd   = document.getElementById('emp-new-password').value;
   if (!name||!email||!pwd) return alert('أدخل جميع الحقول');
   const sess = getSession();
-  const auth = loadAuth();
+  const auth = await syncAuth();
   const client = auth.clients.find(c => c.id === sess.clientId);
   if ((client.employees||[]).find(e=>e.email.toLowerCase()===email)) return alert('هذا الإيميل مسجل مسبقاً');
   const hash = await hashPwd(pwd);
@@ -2836,6 +2855,17 @@ async function addEmployee() {
   if (!client.employees) client.employees = [];
   client.employees.push(emp);
   saveAuth(auth);
+  
+  // Send Employee Onboarding Email
+  const cfg = await getEmailJSConfig();
+  sendTasksupEmail(
+    email,
+    name,
+    `أهلاً بك! تم تعيينك كموظف في مشروع ${client.name} على منصة Tasksup للمحاسبة. يمكنك الدخول الآن باستخدام إيميلك وكلمة المرور التي زودك بها مدير الحساب لضبط صلاحياتك.`,
+    cfg.appUrl,
+    'دخول النظام'
+  );
+
   ['emp-new-name','emp-new-email','emp-new-password'].forEach(id => document.getElementById(id).value='');
   renderEmployeesModal();
 }
