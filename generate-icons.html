@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Generate Icons</title></head>
+<body>
+<p>جاري إنشاء الأيقونات...</p>
+<canvas id="c192" width="192" height="192" style="display:none"></canvas>
+<canvas id="c512" width="512" height="512" style="display:none"></canvas>
+<script>
+function drawIcon(canvas, size) {
+  const ctx = canvas.getContext('2d');
+  const r = size * 0.18;
+  // Background
+  const grad = ctx.createLinearGradient(0, 0, size, size);
+  grad.addColorStop(0, '#6366f1');
+  grad.addColorStop(1, '#4f46e5');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(0, 0, size, size, r);
+  ctx.fill();
+  // Briefcase icon
+  const sc = size / 192;
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${Math.round(110 * sc)}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('💼', size / 2, size / 2 + 4 * sc);
+}
+
+['192','512'].forEach(sz => {
+  const canvas = document.getElementById('c' + sz);
+  drawIcon(canvas, parseInt(sz));
+  canvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'icon-' + sz + '.png';
+    a.click();
+  }, 'image/png');
+});
+setTimeout(() => document.querySelector('p').textContent = '✅ تم تحميل الأيقونتين. ضع الملفين icon-192.png و icon-512.png في نفس مجلد accounting.html', 1000);
+</script>
+</body>
+</html>

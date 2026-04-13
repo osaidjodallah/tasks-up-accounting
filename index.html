@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نموذج استقبال العملاء</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f5f5f5; color: #1a1a1a; direction: rtl; }
+  .page { max-width: 560px; margin: 0 auto; padding: 2rem 1rem; }
+  .hero { text-align: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e5e5e5; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; color: #1d4ed8; margin: 0 auto 1rem; }
+  .hero h1 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .hero p { font-size: 14px; color: #6b7280; line-height: 1.6; }
+  .services { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 2rem; }
+  .svc { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 8px; text-align: center; }
+  .svc-icon { width: 28px; height: 28px; border-radius: 50%; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; }
+  .svc-name { font-size: 12px; font-weight: 600; color: #111827; margin-bottom: 2px; }
+  .svc-sub { font-size: 11px; color: #9ca3af; }
+  .step-indicator { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 1.5rem; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; transition: background 0.2s; }
+  .dot.active { background: #2563eb; }
+  .dot.done { background: #10b981; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 1.5rem; }
+  .card h2 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .card .sub { font-size: 13px; color: #6b7280; margin-bottom: 1.25rem; line-height: 1.5; }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .opt { border: 1px solid #d1d5db; border-radius: 10px; padding: 12px; font-size: 13px; cursor: pointer; color: #111827; background: #fff; text-align: right; transition: all 0.15s; width: 100%; }
+  .opt:hover { background: #f9fafb; border-color: #93c5fd; }
+  .opt.selected { border-color: #2563eb; background: #eff6ff; }
+  .opt-label { font-weight: 600; font-size: 13px; }
+  .opt-sub { font-size: 11px; color: #6b7280; margin-top: 3px; }
+  .opt.selected .opt-sub { color: #3b82f6; }
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 13px; color: #6b7280; margin-bottom: 6px; font-weight: 500; }
+  .field input, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; font-family: inherit; direction: rtl; outline: none; transition: border 0.15s; }
+  .field input:focus, .field textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .field textarea { height: 80px; resize: none; }
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; gap: 8px; }
+  .btn-back { border: 1px solid #d1d5db; background: none; border-radius: 10px; padding: 9px 18px; font-size: 13px; cursor: pointer; color: #6b7280; font-family: inherit; }
+  .btn-back:hover { background: #f9fafb; }
+  .btn-next { background: #1d4ed8; color: #fff; border: none; border-radius: 10px; padding: 9px 24px; font-size: 13px; cursor: pointer; font-weight: 600; flex: 1; font-family: inherit; transition: background 0.15s; }
+  .btn-next:hover { background: #1e40af; }
+  .btn-next:disabled { background: #d1d5db; cursor: not-allowed; }
+  .step { display: none; }
+  .step.active { display: block; }
+  .success { text-align: center; padding: 1rem 0; }
+  .success-icon { width: 56px; height: 56px; border-radius: 50%; background: #d1fae5; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+  .success h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .success p { font-size: 14px; color: #6b7280; line-height: 1.6; margin-bottom: 1.5rem; }
+  .summary-box { background: #f9fafb; border-radius: 10px; padding: 1rem; text-align: right; margin-bottom: 1rem; }
+  .sum-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #e5e7eb; }
+  .sum-row:last-child { border-bottom: none; }
+  .sum-key { color: #6b7280; }
+  .sum-val { color: #111827; font-weight: 600; }
+  .wa-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: #16a34a; color: #fff; border: none; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; font-family: inherit; transition: background 0.15s; }
+  .wa-btn:hover { background: #15803d; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hero">
+    <div class="avatar">م</div>
+    <h1>أهلاً، أنا متخصص في الإعلانات الرقمية</h1>
+    <p>بساعد الأعمال تزيد مبيعاتها من خلال إعلانات مدفوعة مع متابعة النتائج وتحليلها باستمرار</p>
+  </div>
+
+  <div class="services">
+    <div class="svc">
+      <div class="svc-icon" style="background:#dbeafe">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="2" y="8" width="2" height="6" fill="#1d4ed8"/>
+          <rect x="6" y="5" width="2" height="9" fill="#1d4ed8"/>
+          <rect x="10" y="2" width="2" height="12" fill="#1d4ed8"/>
+          <rect x="14" y="4" width="2" height="10" fill="#1d4ed8"/>
+        </svg>
+      </div>
+      <div class="svc-name">إعلانات مدفوعة</div>
+      <div class="svc-sub">Meta & Google Ads</div>
+    </div>
+    <div class="svc">
+      <div class="svc-icon" style="background:#d1fae5">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6" stroke="#059669" stroke-width="1.5"/>
+          <path d="M8 5v3l2 2" stroke="#059669" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="svc-name">متابعة المبيعات</div>
+      <div class="svc-sub">تقارير دورية</div>
+    </div>
+    <div class="svc">
+      <div class="svc-icon" style="background:#fef3c7">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M2 14l4-4 3 3 5-7" stroke="#d97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="svc-name">الاحتفاظ بالعملاء</div>
+      <div class="svc-sub">نصائح وتطوير</div>
+    </div>
+  </div>
+
+  <div class="step-indicator">
+    <div class="dot active" id="d1"></div>
+    <div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div>
+    <div class="dot" id="d4"></div>
+  </div>
+
+  <div class="card">
+
+    <!-- Step 1 -->
+    <div class="step active" id="s1">
+      <h2>بداية، شو نوع مشروعك؟</h2>
+      <p class="sub">بساعدني أفهم وضعك أكثر</p>
+      <div class="options">
+        <button class="opt" onclick="pick(this,'type','متجر إلكتروني')">
+          <div class="opt-label">متجر إلكتروني</div>
+          <div class="opt-sub">بيع منتجات أونلاين</div>
+        </button>
+        <button class="opt" onclick="pick(this,'type','خدمات محلية')">
+          <div class="opt-label">خدمات محلية</div>
+          <div class="opt-sub">مطعم، صالون، عيادة...</div>
+        </button>
+        <button class="opt" onclick="pick(this,'type','خدمات B2B')">
+          <div class="opt-label">خدمات B2B</div>
+          <div class="opt-sub">خدمات للشركات</div>
+        </button>
+        <button class="opt" onclick="pick(this,'type','مشروع ناشئ')">
+          <div class="opt-label">مشروع ناشئ</div>
+          <div class="opt-sub">بداية أو تجربة</div>
+        </button>
+      </div>
+      <div class="nav">
+        <button class="btn-next" id="n1" onclick="next(2)" disabled>التالي</button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" id="s2">
+      <h2>كم عمر المشروع؟</h2>
+      <p class="sub">يأثر على استراتيجية الإعلان المناسبة</p>
+      <div class="options">
+        <button class="opt" onclick="pick(this,'age','أقل من 6 أشهر')">
+          <div class="opt-label">أقل من 6 أشهر</div>
+          <div class="opt-sub">مشروع جديد</div>
+        </button>
+        <button class="opt" onclick="pick(this,'age','6 أشهر – سنة')">
+          <div class="opt-label">6 أشهر – سنة</div>
+          <div class="opt-sub">بداية النمو</div>
+        </button>
+        <button class="opt" onclick="pick(this,'age','1 – 3 سنوات')">
+          <div class="opt-label">1 – 3 سنوات</div>
+          <div class="opt-sub">مشروع قائم</div>
+        </button>
+        <button class="opt" onclick="pick(this,'age','أكثر من 3 سنوات')">
+          <div class="opt-label">أكثر من 3 سنوات</div>
+          <div class="opt-sub">مشروع ناضج</div>
+        </button>
+      </div>
+      <div class="nav">
+        <button class="btn-back" onclick="back(1)">رجوع</button>
+        <button class="btn-next" id="n2" onclick="next(3)" disabled>التالي</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" id="s3">
+      <h2>كم ميزانيتك اليومية للإعلانات؟</h2>
+      <p class="sub">بساعدك تعرف الباقة الأنسب لك</p>
+      <div class="options">
+        <button class="opt" onclick="pick(this,'budget','أقل من $10/يوم')">
+          <div class="opt-label">أقل من $10</div>
+          <div class="opt-sub">يومياً</div>
+        </button>
+        <button class="opt" onclick="pick(this,'budget','$10 – $30/يوم')">
+          <div class="opt-label">$10 – $30</div>
+          <div class="opt-sub">يومياً</div>
+        </button>
+        <button class="opt" onclick="pick(this,'budget','$30 – $100/يوم')">
+          <div class="opt-label">$30 – $100</div>
+          <div class="opt-sub">يومياً</div>
+        </button>
+        <button class="opt" onclick="pick(this,'budget','أكثر من $100/يوم')">
+          <div class="opt-label">أكثر من $100</div>
+          <div class="opt-sub">يومياً</div>
+        </button>
+      </div>
+      <div class="nav">
+        <button class="btn-back" onclick="back(2)">رجوع</button>
+        <button class="btn-next" id="n3" onclick="next(4)" disabled>التالي</button>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" id="s4">
+      <h2>آخر خطوة — بياناتك</h2>
+      <p class="sub">وبعدها بتوصلك ملخص المحادثة على واتساب</p>
+      <div class="field">
+        <label>اسمك</label>
+        <input type="text" id="fname" placeholder="محمد أحمد" oninput="checkFinal()"/>
+      </div>
+      <div class="field">
+        <label>رابط صفحتك أو موقعك</label>
+        <input type="url" id="flink" placeholder="instagram.com/yourpage" oninput="checkFinal()"/>
+      </div>
+      <div class="field">
+        <label>شو هدفك الرئيسي من الإعلانات؟ (اختياري)</label>
+        <textarea id="fgoal" placeholder="مثلاً: زيادة المبيعات، بناء متابعين، الوصول لفئة معينة..."></textarea>
+      </div>
+      <div class="nav">
+        <button class="btn-back" onclick="back(3)">رجوع</button>
+        <button class="btn-next" id="n4" onclick="submit()" disabled>إرسال الطلب</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Success -->
+    <div class="step" id="s5">
+      <div class="success">
+        <div class="success-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M5 13l4 4L19 7" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>وصل طلبك!</h2>
+        <p>هاي ملخص معلوماتك — بتواصل معك خلال 24 ساعة للحديث عن التفاصيل</p>
+        <div class="summary-box" id="summary"></div>
+        <button class="wa-btn" onclick="openWA()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          تواصل معي على واتساب
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const data = {};
+
+  function pick(btn, key, val) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    data[key] = val;
+    const stepMap = { type: 1, age: 2, budget: 3 };
+    const nextBtn = document.getElementById('n' + stepMap[key]);
+    if (nextBtn) nextBtn.disabled = false;
+  }
+
+  function next(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('s' + n).classList.add('active');
+    updateDots(n);
+  }
+
+  function back(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('s' + n).classList.add('active');
+    updateDots(n);
+  }
+
+  function updateDots(n) {
+    for (let i = 1; i <= 4; i++) {
+      const d = document.getElementById('d' + i);
+      d.className = 'dot';
+      if (i < n) d.classList.add('done');
+      else if (i === n) d.classList.add('active');
+    }
+  }
+
+  function checkFinal() {
+    const name = document.getElementById('fname').value.trim();
+    const link = document.getElementById('flink').value.trim();
+    document.getElementById('n4').disabled = !(name && link);
+  }
+
+  async function submit() {
+    data.name = document.getElementById('fname').value.trim();
+    data.link = document.getElementById('flink').value.trim();
+    data.goal = document.getElementById('fgoal').value.trim();
+
+    const rows = [
+      ['الاسم', data.name],
+      ['نوع المشروع', data.type],
+      ['عمر المشروع', data.age],
+      ['الميزانية اليومية', data.budget],
+      ['الرابط', data.link],
+    ];
+    if (data.goal) rows.push(['الهدف', data.goal]);
+
+    document.getElementById('summary').innerHTML = rows.map(([k, v]) =>
+      `<div class="sum-row"><span class="sum-key">${k}</span><span class="sum-val">${v}</span></div>`
+    ).join('');
+
+    // إرسال البيانات إلى n8n Webhook
+    // قم باستبدال الرابط أدناه برابط الـ Webhook الخاص بك من n8n
+    const webhookUrl = 'https://YOUR_N8N_WEBHOOK_URL_HERE';
+    
+    try {
+      // إظهار حالة التحميل على الزر
+      const btn = document.getElementById('n4');
+      const originalText = btn.innerText;
+      btn.innerText = 'جاري الإرسال...';
+      btn.disabled = true;
+
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+      
+      btn.innerText = originalText;
+    } catch (error) {
+      console.error('Error sending data:', error);
+      // في الحالتين سنكمل للخطوة التالية لكي لا نوقف تجربة العميل
+    }
+
+    next(5);
+    document.getElementById('d4').className = 'dot done';
+  }
+
+  function openWA() {
+    // ← غيّر الرقم هنا برقم واتساب تبعك (مع كود الدولة بدون +)
+    const phone = '970XXXXXXXXX';
+    const msg = encodeURIComponent(
+      `مرحباً، أنا ${data.name}\n` +
+      `نوع مشروعي: ${data.type}\n` +
+      `عمر المشروع: ${data.age}\n` +
+      `الميزانية اليومية: ${data.budget}\n` +
+      `الصفحة: ${data.link}` +
+      (data.goal ? `\nالهدف: ${data.goal}` : '')
+    );
+    window.open(`https://wa.me/${phone}?text=${msg}`);
+  }
+</script>
+</body>
+</html>
