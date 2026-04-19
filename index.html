@@ -1099,10 +1099,14 @@
             <input type="number" id="sp-price" placeholder="0" autocomplete="off">
           </div>
         </div>
-        <div class="form-grid form-grid-2" style="margin-bottom:14px;">
+        <div class="form-grid form-grid-3" style="margin-bottom:14px;">
           <div class="form-group">
             <label>تكلفة المنتج (اختياري)</label>
             <input type="number" id="sp-cost" placeholder="0" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>المخزون الحالي (اختياري)</label>
+            <input type="number" id="sp-stock" placeholder="0" autocomplete="off">
           </div>
           <div class="form-group">
             <label>العملة</label>
@@ -1114,7 +1118,7 @@
             </select>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="addStoreProduct()">＋ إضافة</button>
+        <button class="btn btn-primary" onclick="addStoreProduct()">＋ إضافة المنتج</button>
       </div>
     </div>
     <div class="card" style="max-width:700px; margin-top:14px;">
@@ -1989,6 +1993,10 @@
             <option value="USD">USD $</option>
             <option value="SAR">SAR ريال</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>المخزون الأولي</label>
+          <input type="number" id="npi-stock" placeholder="0" autocomplete="off">
         </div>
       </div>
     </div>
@@ -4755,19 +4763,33 @@ function updateBottomNav(sys) {
 function addStoreProduct() {
   const name = document.getElementById('sp-name').value.trim();
   if (!name) return alert('أدخل اسم المنتج');
-  // Support both old string array and new object array
-  const existing = db.store.products.find(p => (typeof p === 'string' ? p : p.name) === name);
+  const existing = db.store.products.find(p => getProductName(p) === name);
   if (existing) return alert('المنتج موجود مسبقاً');
   const cost  = parseFloat(document.getElementById('sp-cost').value) || 0;
   const price = parseFloat(document.getElementById('sp-price').value) || 0;
+  const stock = parseInt(document.getElementById('sp-stock').value) || 0;
   const currency = document.getElementById('sp-currency').value;
-  db.store.products.push({ id: genId(), name, cost, price, currency });
+  db.store.products.push({ id: genId(), name, cost, price, stock, currency });
   saveDB();
   document.getElementById('sp-name').value = '';
   document.getElementById('sp-price').value = '';
   document.getElementById('sp-cost').value = '';
+  document.getElementById('sp-stock').value = '';
   renderStoreProducts();
   populateOrderProductDropdown();
+}
+
+function addStock(id) {
+  const p = db.store.products.find(x => x.id === id);
+  if (!p) return;
+  const amt = prompt(`إضافة مخزون لـ ${p.name}:\nأدخل الكمية التي تم استلامها:`, "0");
+  if (amt === null) return;
+  const n = parseInt(amt);
+  if (isNaN(n) || n <= 0) return alert('يرجى إدخال رقم صحيح');
+  p.stock = (p.stock || 0) + n;
+  saveDB();
+  renderStoreProducts();
+  showToast && showToast('تم تحديث المخزون بنجاح');
 }
 
 function removeStoreProduct(id) {
@@ -4782,6 +4804,10 @@ function getProductCost(name) {
   const p = db.store.products.find(pr => getProductName(pr) === name);
   return p && typeof p === 'object' ? (p.cost || 0) : 0;
 }
+function getProductStock(name) {
+  const p = db.store.products.find(pr => getProductName(pr) === name);
+  return p && typeof p === 'object' ? (p.stock || 0) : 0;
+}
 
 function renderStoreProducts() {
   const el = document.getElementById('store-products-list');
@@ -4789,21 +4815,29 @@ function renderStoreProducts() {
   if (!db.store.products.length) { el.innerHTML = '<div class="empty" style="padding:20px"><p>لا يوجد منتجات. أضف منتجك الأول!</p></div>'; return; }
   el.innerHTML = `<table style="width:100%;font-size:13px;">
     <thead><tr>
-      <th>المنتج</th><th>التكلفة</th><th>سعر البيع</th><th>الربح/وحدة</th><th></th>
+      <th>المنتج</th><th>المخزون</th><th>التكلفة</th><th>سعر البيع</th><th>الربح/وحدة</th><th></th>
     </tr></thead>
     <tbody>` + db.store.products.map(p => {
     const name = getProductName(p);
     const cost  = typeof p === 'object' ? (p.cost || 0) : 0;
     const price = typeof p === 'object' ? (p.price || 0) : 0;
+    const stock = typeof p === 'object' ? (p.stock || 0) : 0;
     const profit = price - cost;
     const id = typeof p === 'object' ? p.id : p;
     const cur = typeof p === 'object' ? (p.currency || '') : '';
+    const stockClass = stock <= 0 ? 'color:var(--danger);font-weight:700;' : stock <= 5 ? 'color:var(--warning);font-weight:700;' : '';
     return `<tr>
       <td><strong>${name}</strong></td>
+      <td style="${stockClass}">${stock}</td>
       <td>${cost ? cost.toLocaleString() + ' ' + cur : '—'}</td>
       <td>${price ? price.toLocaleString() + ' ' + cur : '—'}</td>
       <td style="color:${profit>0?'var(--success)':profit<0?'var(--danger)':'var(--text-muted)'}">${price&&cost ? (profit>0?'+':'')+profit.toLocaleString()+' '+cur : '—'}</td>
-      <td><button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);border:none;" onclick="removeStoreProduct('${id}')">✕</button></td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-sm btn-outline" style="padding:4px 8px;" onclick="addStock('${id}')" title="إضافة بضاعة">➕</button>
+          <button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);border:none;" onclick="removeStoreProduct('${id}')">✕</button>
+        </div>
+      </td>
     </tr>`;
   }).join('') + '</tbody></table>';
 }
@@ -4848,6 +4882,7 @@ function onOrderProductChange(rowId, val) {
     document.getElementById('npi-name').value = '';
     document.getElementById('npi-cost').value = '';
     document.getElementById('npi-price').value = '';
+    document.getElementById('npi-stock').value = '';
     openModal('modal-new-product-inline');
     // reset select back
     const sel = document.querySelector(`select[data-row="${rowId}"]`);
@@ -4857,7 +4892,7 @@ function onOrderProductChange(rowId, val) {
   setOrderItemPrice(rowId, val);
   const item = orderItems.find(i => i.rowId === rowId);
   if (item) item.productName = val;
-  updateOrderTotal();
+  renderOrderItems(); // Re-render to show updated stock and prices
 }
 
 function setOrderItemPrice(rowId, productName) {
@@ -4878,6 +4913,11 @@ function onOrderPriceChange(rowId, val) {
 function onOrderQtyChange(rowId, val) {
   const item = orderItems.find(i => i.rowId === rowId);
   if (item) item.qty = parseInt(val) || 1;
+  // Update the subtotal label for this row without full re-render to keep focus if typing
+  const subtotalEl = document.querySelector(`[data-row-subtotal="${rowId}"]`);
+  if (subtotalEl) {
+    subtotalEl.textContent = (item.price && item.qty > 1) ? 'مجموع: '+(item.price*item.qty).toLocaleString() : '';
+  }
   updateOrderTotal();
 }
 
@@ -4890,7 +4930,12 @@ function updateOrderTotal() {
 function renderOrderItems() {
   const el = document.getElementById('order-items-list');
   if (!el) return;
-  el.innerHTML = orderItems.map((item, idx) => `
+  el.innerHTML = orderItems.map((item, idx) => {
+    const stock = getProductStock(item.productName);
+    const stockMsg = item.productName ? ` | المتوفر: ${stock}` : '';
+    const stockClass = stock <= 0 ? 'color:var(--danger);font-weight:700;' : (stock < item.qty) ? 'color:var(--warning);font-weight:700;' : '';
+
+    return `
     <div style="display:grid;grid-template-columns:1fr 90px 60px auto;gap:6px;align-items:center;">
       <select data-row="${item.rowId}" onchange="onOrderProductChange('${item.rowId}', this.value)"
         style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
@@ -4908,9 +4953,10 @@ function renderOrderItems() {
         : '<div></div>'}
     </div>
     <div style="display:flex;justify-content:space-between;padding:0 2px;">
-      <span style="font-size:11px;color:var(--text-muted);">${item.productName ? '💡 سعر: '+getProductPrice(item.productName)+' | تكلفة: '+getProductCost(item.productName) : ''}</span>
-      <span style="font-size:11px;color:var(--primary);font-weight:600;">${item.price && item.qty > 1 ? 'مجموع: '+(item.price*item.qty).toLocaleString() : ''}</span>
-    </div>`).join('');
+      <span style="font-size:11px;color:var(--text-muted);">${item.productName ? '💡 سعر: '+getProductPrice(item.productName) + stockMsg : ''}</span>
+      <span data-row-subtotal="${item.rowId}" style="font-size:11px;${stockClass}">${item.price && item.qty > 1 ? 'مجموع: '+(item.price*item.qty).toLocaleString() : ''}</span>
+    </div>`;
+  }).join('');
   updateOrderTotal();
 }
 
@@ -4919,11 +4965,12 @@ function saveNewProductInline() {
   if (!name) return alert('أدخل اسم المنتج');
   const cost     = parseFloat(document.getElementById('npi-cost').value) || 0;
   const price    = parseFloat(document.getElementById('npi-price').value) || 0;
+  const stock    = parseInt(document.getElementById('npi-stock').value) || 0;
   const currency = document.getElementById('npi-currency').value;
   // Save to products
   const existing = db.store.products.find(p => getProductName(p) === name);
   if (!existing) {
-    db.store.products.push({ id: genId(), name, cost, price, currency });
+    db.store.products.push({ id: genId(), name, cost, price, stock, currency });
     saveDB();
     renderStoreProducts();
   }
@@ -4961,8 +5008,15 @@ function saveOrder() {
   const phone    = document.getElementById('order-phone').value.trim();
   const city     = document.getElementById('order-city').value.trim();
   const note     = document.getElementById('order-note').value.trim();
-  const groupId  = genId(); // link multi-product orders together
+  const groupId  = genId(); 
+  
   validItems.forEach(item => {
+    // Decrement stock
+    const p = db.store.products.find(x => getProductName(x) === item.productName);
+    if (p && typeof p === 'object') {
+      p.stock = (p.stock || 0) - item.qty;
+    }
+
     db.store.orders.push({
       id: genId(), groupId,
       product: item.productName,
@@ -4974,14 +5028,23 @@ function saveOrder() {
   saveDB();
   closeModal('modal-add-order');
   renderOrders();
+  renderStoreProducts(); // update products list if visible
   if (document.getElementById('page-store-dashboard').classList.contains('active')) renderStoreDashboard();
 }
 
 function deleteOrder(groupId) {
-  if (!confirm('حذف هذا الطلب؟')) return;
+  if (!confirm('حذف هذا الطلب؟ سيتم إعادة الكمية للمخزون.')) return;
+  const ordersToDelete = db.store.orders.filter(o => (o.groupId || o.id) === groupId);
+  ordersToDelete.forEach(o => {
+    const p = db.store.products.find(x => getProductName(x) === o.product);
+    if (p && typeof p === 'object') {
+      p.stock = (p.stock || 0) + (o.qty || 1);
+    }
+  });
   db.store.orders = db.store.orders.filter(o => (o.groupId || o.id) !== groupId);
   saveDB();
   renderOrders();
+  renderStoreProducts();
   if (document.getElementById('page-store-dashboard').classList.contains('active')) renderStoreDashboard();
 }
 
