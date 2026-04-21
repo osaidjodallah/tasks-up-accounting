@@ -2719,15 +2719,19 @@ async function loadCurrentAccount() {
   const saved = localStorage.getItem('mkt_data_' + sess.currentAccountId);
   if (saved) {
     db = { ...getDefaultDB(), ...JSON.parse(saved) };
-  } else {
-    // Try Supabase
+  }
+  // دائماً جلب أحدث نسخة من Supabase (لضمان المزامنة بين الأجهزة)
+  try {
     const remote = await supabaseGet('mkt_data_' + sess.currentAccountId);
     if (remote) {
       db = { ...getDefaultDB(), ...remote };
       localStorage.setItem('mkt_data_' + sess.currentAccountId, JSON.stringify(db));
-    } else {
+    } else if (!saved) {
       db = getDefaultDB();
     }
+  } catch(e) {
+    // Supabase غير متاح — استخدم البيانات المحلية
+    if (!saved) db = getDefaultDB();
   }
   if (!db.store) db.store = { products:[], orders:[] };
   if (!db.store.products) db.store.products = [];
@@ -4144,7 +4148,12 @@ function markSchedAsPaid(clientId, schedId) {
   const nearest = c.scheduledPayments
     .filter(x => new Date(x.date) >= today)
     .sort((a,b) => new Date(a.date)-new Date(b.date))[0];
-  if (nearest) c.dueDate = nearest.date;
+  if (nearest) {
+    c.dueDate = nearest.date;
+  } else {
+    // لا توجد دفعات مجدولة قادمة — امسح dueDate حتى لا يظهر في المتأخرات
+    c.dueDate = '';
+  }
   saveDB();
   renderScheduledPayments(c);
   renderPaymentHistory(c);
