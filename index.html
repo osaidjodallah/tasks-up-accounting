@@ -293,9 +293,10 @@
     background: var(--white); border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .bottom-nav-inner { display: flex; }
+  .bottom-nav-inner { display: flex; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .bottom-nav-inner::-webkit-scrollbar { display: none; }
   .bottom-nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 0 0 auto; min-width: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 8px 4px; cursor: pointer; font-size: 10px; color: var(--text-muted);
     border: none; background: none; gap: 3px; transition: color 0.15s;
   }
@@ -5061,13 +5062,15 @@ function updateBottomNav(sys) {
       <button class="bottom-nav-item" id="bn-services" onclick="showPage('services')"><span class="bni">⚙️</span><span>الخدمات</span></button>
     `;
   } else {
+    const waBtn = isWAEnabled() ? `<button class="bottom-nav-item" id="bn-wa-broadcast" onclick="showPage('wa-broadcast')"><span class="bni">📱</span><span>واتساب</span></button>` : '';
     inner.innerHTML = `
       <button class="bottom-nav-item" id="bn-store-dashboard" onclick="showPage('store-dashboard')"><span class="bni">📊</span><span>الرئيسية</span></button>
       <button class="bottom-nav-item" id="bn-store-orders" onclick="showPage('store-orders')"><span class="bni">🛍</span><span>الطلبات</span></button>
-      <button class="bottom-nav-item active" onclick="openAddOrderModal()" style="color:var(--primary)"><span class="bni" style="background:var(--primary);color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-top:-8px;">＋</span><span>طلب جديد</span></button>
-      <button class="bottom-nav-item" id="bn-store-analysis" onclick="showPage('store-analysis')"><span class="bni">📈</span><span>التحليل</span></button>
+      <button class="bottom-nav-item" onclick="openAddOrderModal()" style="color:var(--primary)"><span class="bni" style="background:var(--primary);color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-top:-8px;">＋</span><span>جديد</span></button>
       <button class="bottom-nav-item" id="bn-store-products" onclick="showPage('store-products')"><span class="bni">📦</span><span>المنتجات</span></button>
       <button class="bottom-nav-item" id="bn-store-profit" onclick="showPage('store-profit')"><span class="bni">💰</span><span>الربح</span></button>
+      <button class="bottom-nav-item" id="bn-loyalty" onclick="showPage('loyalty')"><span class="bni">🎁</span><span>الولاء</span></button>
+      ${waBtn}
     `;
   }
   updateDueBadge();
@@ -6017,9 +6020,29 @@ function toggleWhatsAppFeature(clientId) {
 
 // Show/hide WhatsApp nav item based on session & current system
 function updateWANavVisibility() {
+  // Desktop sidebar
   const navEl = document.getElementById('nav-wa-broadcast');
-  if (!navEl) return;
-  navEl.style.display = (currentSystem === 'store' && isWAEnabled()) ? '' : 'none';
+  if (navEl) navEl.style.display = (currentSystem === 'store' && isWAEnabled()) ? '' : 'none';
+
+  // Mobile bottom nav — rebuild store nav to inject/remove WA button
+  if (currentSystem === 'store') {
+    const bnWA = document.getElementById('bn-wa-broadcast');
+    const waEnabled = isWAEnabled();
+    if (waEnabled && !bnWA) {
+      // Add button to bottom nav
+      const inner = document.querySelector('.bottom-nav-inner');
+      if (inner) {
+        const btn = document.createElement('button');
+        btn.className = 'bottom-nav-item';
+        btn.id = 'bn-wa-broadcast';
+        btn.onclick = () => showPage('wa-broadcast');
+        btn.innerHTML = '<span class="bni">📱</span><span>واتساب</span>';
+        inner.appendChild(btn);
+      }
+    } else if (!waEnabled && bnWA) {
+      bnWA.remove();
+    }
+  }
 }
 
 // ========== INIT ==========
