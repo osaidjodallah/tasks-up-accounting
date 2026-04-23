@@ -2445,6 +2445,10 @@ async function syncAuth() {
   return loadAuth();
 }
 
+async function initAuthIfNeeded() {
+  await syncAuth();
+}
+
 // ---- LOGIN ----
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim().toLowerCase();
@@ -3130,8 +3134,8 @@ function applyPermissions() {
     const client = auth.clients?.find(c=>c.id===sess.clientId);
     const acc = client?.accounts?.find(a=>a.id===sess.currentAccountId);
     const pages = acc?.type==='store'
-      ? { 'store-orders':'orders','store-analysis':'analysis','store-products':'settings','store-profit':'analysis' }
-      : { 'clients':'clients','payments-due':'payments','expenses':'expenses','services':'settings' };
+      ? { 'store-orders':'orders','store-analysis':'analysis','store-products':'settings','store-profit':'analysis', 'loyalty':'clients', 'wa-broadcast':'whatsapp' }
+      : { 'clients':'clients','payments-due':'payments', 'expenses':'expenses','services':'settings' };
     Object.entries(pages).forEach(([pg,perm]) => {
       const el = document.querySelector(`.nav-item[onclick="showPage('${pg}')"]`);
       if (el) el.style.display = canView(perm) ? '' : 'none';
