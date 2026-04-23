@@ -508,6 +508,26 @@
     padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(99,102,241,0.4);
   }
   .sa-back-btn.show { display:block; }
+
+  /* ===== LOYALTY & WHATSAPP ===== */
+  .tag-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:600; }
+  .tag-chip-remove { background:none; border:none; cursor:pointer; font-size:12px; padding:0; line-height:1; opacity:0.6; }
+  .tag-chip-remove:hover { opacity:1; }
+  .tag-auto  { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+  .tag-manual { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+
+  .cust-card { background:white; border:1px solid var(--border); border-radius:12px; padding:14px 16px; transition:all 0.15s; cursor:pointer; }
+  .cust-card:hover { border-color:var(--primary); box-shadow:0 2px 8px rgba(99,102,241,0.1); }
+  .cust-points-badge { background:linear-gradient(135deg,#f59e0b,#d97706); color:white; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:700; white-space:nowrap; }
+
+  .wa-msg-preview { background:#dcf8c6; border-radius:12px; padding:14px 16px; font-size:13px; line-height:1.7; white-space:pre-wrap; border:1px solid #b2dfa1; }
+  .wa-feature-locked { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:2px dashed #86efac; border-radius:16px; padding:32px; text-align:center; }
+
+  .wa-toggle-btn { padding:5px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; border:none; transition:all 0.15s; }
+  .wa-toggle-on  { background:#dcfce7; color:#166534; }
+  .wa-toggle-off { background:#fee2e2; color:#991b1b; }
+
+  .loyalty-filter-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -566,6 +586,55 @@
       </div>
       <button class="btn btn-outline" onclick="openEmailJSConfig()">⚙️ إعداد EmailJS</button>
     </div>
+    <!-- WhatsApp Setup Guide -->
+    <details style="background:white;border:1px solid #bbf7d0;border-radius:12px;margin-bottom:20px;overflow:hidden;">
+      <summary style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:#166534;list-style:none;user-select:none;">
+        <span style="font-size:20px;">📱</span>
+        <span>كيف تُفعّل الواتساب والرسائل لأي عميل؟</span>
+        <span style="margin-right:auto;font-size:11px;font-weight:500;color:#16a34a;background:#dcfce7;padding:2px 10px;border-radius:99px;">دليل الإعداد</span>
+      </summary>
+      <div style="padding:0 18px 18px;border-top:1px solid #bbf7d0;">
+        <div style="margin-top:14px;display:grid;gap:10px;">
+          <!-- Step 1 -->
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:#f0fdf4;border-radius:10px;">
+            <div style="min-width:28px;height:28px;border-radius:50%;background:#16a34a;color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;">1</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:2px;">فعّل ميزة الواتساب للعميل</div>
+              <div style="font-size:12px;color:#4b5563;">في قائمة الحسابات أدناه، ابحث عن العميل واضغط زر <strong>📱 واتساب ❌</strong> ليصبح <strong>📱 واتساب ✅</strong>. يظهر بعدها للعميل قسم إعدادات الواتساب.</div>
+            </div>
+          </div>
+          <!-- Step 2 -->
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:#f0fdf4;border-radius:10px;">
+            <div style="min-width:28px;height:28px;border-radius:50%;background:#16a34a;color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;">2</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:2px;">أخبر العميل يسجّل في UltraMsg</div>
+              <div style="font-size:12px;color:#4b5563;">يدخل على <strong style="direction:ltr;">ultramsg.com</strong> ← ينشئ حساب مجاني ← ينشئ Instance جديد ← يمسح الـ <strong>QR Code</strong> بهاتفه ليربط رقم الواتساب.</div>
+            </div>
+          </div>
+          <!-- Step 3 -->
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:#f0fdf4;border-radius:10px;">
+            <div style="min-width:28px;height:28px;border-radius:50%;background:#16a34a;color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;">3</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:2px;">العميل يُدخل Instance ID و Token في الإعدادات</div>
+              <div style="font-size:12px;color:#4b5563;">بعد ربط الواتساب على UltraMsg، يأخذ العميل الـ <strong>Instance ID</strong> والـ <strong>Token</strong> ويضعهم في <strong>الإعدادات ← إعدادات الواتساب</strong> ثم يضغط "حفظ".</div>
+            </div>
+          </div>
+          <!-- Step 4 -->
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:#f0fdf4;border-radius:10px;">
+            <div style="min-width:28px;height:28px;border-radius:50%;background:#16a34a;color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;">4</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:2px;">جاهز! الواتساب مربوط ببرنامج الولاء</div>
+              <div style="font-size:12px;color:#4b5563;">يظهر للعميل في الشريط الجانبي <strong>📱 إرسال واتساب</strong>. يقدر يرسل رسائل مجمعة لعملاء الولاء، يختار القوالب، وينبّه على الدفعات المتأخرة كلها من داخل Tasksup.</div>
+            </div>
+          </div>
+          <!-- Note -->
+          <div style="padding:10px 14px;background:#fefce8;border:1px solid #fde68a;border-radius:8px;font-size:12px;color:#92400e;">
+            ⚠️ <strong>ملاحظة:</strong> خطة UltraMsg المجانية تتيح ~100 رسالة/شهر. للرسائل الغير محدودة يحتاج العميل خطة مدفوعة على UltraMsg.
+          </div>
+        </div>
+      </div>
+    </details>
+
     <!-- Clients list -->
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
       <h2 style="font-size:16px; font-weight:700;">الحسابات المُنشأة</h2>
@@ -712,6 +781,13 @@
     </a>
     <a class="nav-item" onclick="showPage('store-profit')" href="#">
       <span class="icon">💰</span> حساب الربح
+    </a>
+    <div class="nav-section">الولاء والتسويق</div>
+    <a class="nav-item" id="nav-loyalty" onclick="showPage('loyalty')" href="#">
+      <span class="icon">🎁</span> برنامج الولاء
+    </a>
+    <a class="nav-item" id="nav-wa-broadcast" onclick="showPage('wa-broadcast')" href="#" style="display:none">
+      <span class="icon">📱</span> إرسال واتساب
     </a>
     <a class="nav-item" onclick="showPage('settings')" href="#">
       <span class="icon">🗂</span> الحسابات والصلاحيات
@@ -1333,6 +1409,124 @@
     <div class="card" id="settings-permissions-card" style="display:none; margin-bottom:20px;">
       <div class="card-header"><h3>🔐 صلاحياتي</h3></div>
       <div class="card-body" id="settings-permissions-body"></div>
+    </div>
+
+    <!-- WhatsApp Settings (shown when feature enabled) -->
+    <div class="card" id="wa-settings-card" style="display:none; margin-bottom:20px;">
+      <div class="card-header">
+        <h3>📱 إعدادات واتساب (UltraMsg)</h3>
+        <span id="wa-conn-badge" class="badge badge-gray">غير مهيأ</span>
+      </div>
+      <div class="card-body" id="wa-settings-body"></div>
+    </div>
+  </div>
+
+  <!-- ======== LOYALTY PAGE ======== -->
+  <div class="page" id="page-loyalty">
+    <div class="page-header">
+      <h1>🎁 برنامج الولاء</h1>
+      <p>إدارة عملاء متجرك ونقاط الولاء والتصنيفات</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="loyalty-stats-grid" style="margin-bottom:20px;"></div>
+
+    <!-- Loyalty Settings -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <h3>⚙️ إعدادات النقاط</h3>
+        <button class="btn btn-sm btn-outline perm-hide-if-view" data-perm="orders" onclick="openLoyaltySettings()">تعديل</button>
+      </div>
+      <div class="card-body" id="loyalty-settings-display"></div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div style="margin-bottom:12px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+      <button class="btn btn-sm btn-outline loyalty-filter-btn active" id="loyalty-filter-all" onclick="setLoyaltyFilter('')">الكل</button>
+      <button class="btn btn-sm btn-outline loyalty-filter-btn" id="loyalty-filter-repeat" onclick="setLoyaltyFilter('عميل متكرر')">🔁 متكرر</button>
+      <button class="btn btn-sm btn-outline loyalty-filter-btn" id="loyalty-filter-vip" onclick="setLoyaltyFilter('عميل VIP')">👑 VIP</button>
+      <button class="btn btn-sm btn-outline loyalty-filter-btn" id="loyalty-filter-absent" onclick="setLoyaltyFilter('غائب')">😴 غائب</button>
+      <button class="btn btn-sm btn-outline loyalty-filter-btn" id="loyalty-filter-new" onclick="setLoyaltyFilter('زبون جديد')">🆕 جديد</button>
+    </div>
+    <div class="search-bar" style="margin-bottom:14px;">
+      <input type="text" id="loyalty-search" placeholder="🔍 ابحث بالاسم أو الرقم..." oninput="renderLoyaltyPage()">
+    </div>
+
+    <div id="loyalty-customers-list"></div>
+  </div>
+
+  <!-- ======== WHATSAPP BROADCAST PAGE ======== -->
+  <div class="page" id="page-wa-broadcast">
+    <div class="page-header">
+      <h1>📱 إرسال واتساب مجمع</h1>
+      <p>أرسل رسائل مخصصة لعملائك عبر واتساب</p>
+    </div>
+
+    <!-- Not configured notice -->
+    <div id="wa-not-configured" style="display:none;">
+      <div class="wa-feature-locked">
+        <div style="font-size:48px; margin-bottom:12px;">📱</div>
+        <h3 style="margin-bottom:8px; font-size:18px;">اربط واتساب أولاً</h3>
+        <p style="color:var(--text-muted); margin-bottom:16px; font-size:13px;">اذهب للإعدادات وأدخل بيانات UltraMsg</p>
+        <button class="btn btn-primary" onclick="showPage('settings')">⚙️ الذهاب للإعدادات</button>
+      </div>
+    </div>
+
+    <!-- Broadcast UI -->
+    <div id="wa-broadcast-ui" style="display:none;">
+      <!-- Step 1 -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-header"><h3>1️⃣ اختر الجمهور</h3></div>
+        <div class="card-body">
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+            <button class="btn btn-sm btn-outline loyalty-filter-btn active" id="wa-aud-all" onclick="setWAAudience('all')">الكل</button>
+            <button class="btn btn-sm btn-outline loyalty-filter-btn" id="wa-aud-vip" onclick="setWAAudience('عميل VIP')">👑 VIP</button>
+            <button class="btn btn-sm btn-outline loyalty-filter-btn" id="wa-aud-repeat" onclick="setWAAudience('عميل متكرر')">🔁 متكرر</button>
+            <button class="btn btn-sm btn-outline loyalty-filter-btn" id="wa-aud-absent" onclick="setWAAudience('غائب')">😴 غائب</button>
+            <button class="btn btn-sm btn-outline loyalty-filter-btn" id="wa-aud-new" onclick="setWAAudience('زبون جديد')">🆕 جديد</button>
+          </div>
+          <div id="wa-audience-count" style="font-size:13px; color:var(--text-muted); background:var(--bg); padding:8px 12px; border-radius:8px;">سيتم الإرسال لـ 0 عميل</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-header">
+          <h3>2️⃣ اكتب الرسالة</h3>
+          <span style="font-size:11px; color:var(--text-muted);">يمكن استخدام: {اسم_الزبون} • {رصيد_النقاط}</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group" style="margin-bottom:12px;">
+            <textarea id="wa-message-text" rows="5" placeholder="مثال: أهلاً {اسم_الزبون}! رصيد نقاطك {رصيد_النقاط} نقطة ⭐ استمتع بمكافآتك في متجرنا 🎁" oninput="updateWAPreview()" style="resize:vertical;"></textarea>
+          </div>
+          <div id="wa-preview-box" style="display:none;">
+            <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">📱 معاينة الرسالة:</div>
+            <div class="wa-msg-preview" id="wa-preview-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-body" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn-outline" onclick="updateWAPreview()">👁 معاينة</button>
+          <button class="btn btn-wa" id="wa-send-btn" onclick="startWABroadcast()">📤 إرسال الآن</button>
+          <span id="wa-send-status" style="font-size:13px; color:var(--text-muted);"></span>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div id="wa-progress" style="display:none;">
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:14px; font-weight:700; margin-bottom:10px;" id="wa-progress-title">جاري الإرسال...</div>
+            <div style="background:var(--border); border-radius:99px; height:10px; overflow:hidden; margin-bottom:8px;">
+              <div id="wa-progress-bar" style="height:100%; background:var(--success); border-radius:99px; transition:width 0.4s; width:0%;"></div>
+            </div>
+            <div id="wa-progress-text" style="font-size:12px; color:var(--text-muted);">0 / 0</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2094,6 +2288,106 @@
   </div>
 </div>
 
+<!-- ===== MODAL: CUSTOMER DETAIL ===== -->
+<div class="modal-overlay" id="modal-customer-detail">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <div>
+        <h3 id="cd-name" style="margin-bottom:2px;">عميل</h3>
+        <div style="font-size:12px;color:var(--text-muted);" id="cd-phone"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-customer-detail')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Stats row -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+        <div style="background:var(--warning-light);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:18px;font-weight:800;color:#92400e;" id="cd-points">0</div>
+          <div style="font-size:10px;color:#92400e;margin-top:2px;">⭐ نقاط الولاء</div>
+        </div>
+        <div style="background:var(--success-light);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:18px;font-weight:800;color:#065f46;" id="cd-total-spent">0</div>
+          <div style="font-size:10px;color:#065f46;margin-top:2px;">💰 إجمالي المصروف</div>
+        </div>
+        <div style="background:var(--primary-light);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:18px;font-weight:800;color:var(--primary);" id="cd-total-orders">0</div>
+          <div style="font-size:10px;color:var(--primary);margin-top:2px;">🛍 عدد الطلبات</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">آخر شراء: <strong id="cd-last-purchase">-</strong></div>
+
+      <!-- Tags -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">🏷 التصنيفات</div>
+        <div id="cd-tags" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;"></div>
+      </div>
+
+      <!-- Purchase History -->
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">📋 سجل المشتريات</div>
+        <div id="cd-history"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ADD TAG ===== -->
+<div class="modal-overlay" id="modal-add-tag">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3>🏷 إضافة تاق</h3>
+      <button class="modal-close" onclick="closeModal('modal-add-tag')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>اسم التاق</label>
+        <input type="text" id="new-tag-input" placeholder="مثال: VIP، نساء، جملة، نابلس..." onkeydown="if(event.key==='Enter') saveCustomerTag()">
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <span style="font-size:11px;font-weight:600;color:var(--text-muted);width:100%;margin-bottom:4px;">اقتراحات سريعة:</span>
+        <button class="btn btn-sm btn-outline" onclick="document.getElementById('new-tag-input').value='VIP'">VIP</button>
+        <button class="btn btn-sm btn-outline" onclick="document.getElementById('new-tag-input').value='جملة'">جملة</button>
+        <button class="btn btn-sm btn-outline" onclick="document.getElementById('new-tag-input').value='نساء'">نساء</button>
+        <button class="btn btn-sm btn-outline" onclick="document.getElementById('new-tag-input').value='رجال'">رجال</button>
+        <button class="btn btn-sm btn-outline" onclick="document.getElementById('new-tag-input').value='مهتم بالعروض'">مهتم بالعروض</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-tag')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveCustomerTag()">إضافة التاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: LOYALTY SETTINGS ===== -->
+<div class="modal-overlay" id="modal-loyalty-settings">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>⚙️ إعدادات برنامج الولاء</h3>
+      <button class="modal-close" onclick="closeModal('modal-loyalty-settings')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info" style="margin-bottom:16px;">
+        <span>💡</span>
+        <div>النقاط تُحسب تلقائياً من إجمالي مشتريات كل عميل</div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>عدد النقاط لكل 1$ شراء</label>
+        <input type="number" id="ls-points-per-dollar" value="10" min="1" max="1000">
+      </div>
+      <div class="form-group">
+        <label>عتبة الاسترداد — كم نقطة تساوي خصم 1$؟</label>
+        <input type="number" id="ls-redeem-threshold" value="100" min="1">
+        <span style="font-size:11px;color:var(--text-muted);margin-top:4px;">مثال: 100 نقطة = خصم 1$</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-loyalty-settings')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveLoyaltySettings()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ========== AUTH SYSTEM v2 ==========
 // Hierarchy: SuperAdmin (Osaid) → Clients → Employees
@@ -2508,7 +2802,8 @@ function renderSAPanel() {
         <div style="font-size:12px;color:var(--text-muted);">${c.email} • ${stores} متجر • ${svcs} خدمات • ${(c.employees||[]).length} موظف</div>
         ${c.note ? `<div style="font-size:11px;color:var(--primary);margin-top:2px;">📝 ${c.note}</div>` : ''}
       </div>
-      <div style="display:flex;gap:6px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="wa-toggle-btn ${c.features?.whatsapp ? 'wa-toggle-on' : 'wa-toggle-off'}" onclick="toggleWhatsAppFeature('${c.id}')">📱 ${c.features?.whatsapp ? 'واتساب ✅' : 'واتساب ❌'}</button>
         <button class="btn btn-sm btn-outline" onclick="openEditClientSA('${c.id}')">✏️ تعديل</button>
         <button class="btn btn-sm btn-outline" onclick="loginAsClient('${c.id}')">👁 دخول</button>
       </div>
@@ -2737,6 +3032,8 @@ async function loadCurrentAccount() {
   if (!db.store.products) db.store.products = [];
   if (!db.store.orders) db.store.orders = [];
   if (!db.expenseCategories) db.expenseCategories = [];
+  if (!db.storeCustomers) db.storeCustomers = [];
+  if (!db.loyaltySettings) db.loyaltySettings = { pointsPerDollar: 10, redeemThreshold: 100 };
 }
 function saveDB() {
   const sess = getSession();
@@ -2803,6 +3100,7 @@ function updateUIForSession(clientArg, accArg) {
   }
 
   applyPermissions();
+  updateWANavVisibility();
 }
 
 // ---- PERMISSIONS ----
@@ -3043,6 +3341,8 @@ function renderSettingsPage() {
   } else if (permCard) {
     permCard.style.display = 'none';
   }
+
+  renderWASettingsCard();
 }
 
 function openRenameAccountInline(accId) {
@@ -3765,7 +4065,9 @@ function getDefaultDB() {
     clients: [], expenses: [],
     services: ['إدارة سوشيال ميديا', 'تصميم محتوى', 'إعلانات مدفوعة', 'إدارة موقع', 'تصوير منتجات', 'استراتيجية تسويق'],
     store: { products: [], orders: [] },
-    expenseCategories: []
+    expenseCategories: [],
+    storeCustomers: [],
+    loyaltySettings: { pointsPerDollar: 10, redeemThreshold: 100 }
   };
 }
 
@@ -3818,6 +4120,8 @@ function refreshPage(name) {
   if (name === 'store-profit') { setProfitRange('month'); renderProfitCalc(); }
   if (name === 'settings') renderSettingsPage();
   if (name === 'invoices') renderInvoicesPage();
+  if (name === 'loyalty') renderLoyaltyPage();
+  if (name === 'wa-broadcast') renderWABroadcastPage();
   updateDueBadge();
 }
 
@@ -4708,6 +5012,7 @@ async function switchSystem(sys) {
   document.getElementById('sys-store').classList.toggle('active', sys === 'store');
   document.getElementById('nav-accounting').style.display = sys === 'accounting' ? '' : 'none';
   document.getElementById('nav-store').style.display = sys === 'store' ? '' : 'none';
+  updateWANavVisibility();
   document.getElementById('sidebar-title').textContent = 'Tasksup';
   document.getElementById('sidebar-sub').textContent = sys === 'accounting' ? 'نظام إدارة العملاء والمالية' : 'إدارة الطلبات والمبيعات';
 
@@ -5282,6 +5587,439 @@ function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   return d.toLocaleDateString('ar-JO', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// ========== LOYALTY SYSTEM ==========
+
+let loyaltyFilter = '';
+
+function getStoreCustomersData() {
+  const orders = db.store?.orders || [];
+  const phoneMap = {};
+
+  orders.forEach(o => {
+    const phone = (o.phone || '').trim();
+    const name  = (o.customer || '').trim();
+    if (!phone && !name) return;
+    const key = phone || ('__name__' + name);
+    if (!phoneMap[key]) phoneMap[key] = { phone, name, orders: [] };
+    if (name && !phoneMap[key].name) phoneMap[key].name = name;
+    phoneMap[key].orders.push(o);
+  });
+
+  const manual = db.storeCustomers || [];
+  const settings = db.loyaltySettings || { pointsPerDollar: 10, redeemThreshold: 100 };
+
+  return Object.entries(phoneMap).map(([key, data]) => {
+    const saved = manual.find(c =>
+      (data.phone && c.phone === data.phone) ||
+      (!data.phone && c.name === data.name)
+    );
+
+    const uniqueGroups = new Set(data.orders.map(o => o.groupId || o.id));
+    const totalOrders  = uniqueGroups.size;
+    const totalSpent   = data.orders.reduce((s, o) => s + (o.amount || 0), 0);
+    const sorted       = [...data.orders].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const lastPurchase = sorted[0]?.date;
+    const firstPurchase = [...data.orders].sort((a, b) => new Date(a.date) - new Date(b.date))[0]?.date;
+
+    const now = Date.now();
+    const daysSinceLast  = lastPurchase  ? Math.floor((now - new Date(lastPurchase))  / 86400000) : 999;
+    const daysSinceFirst = firstPurchase ? Math.floor((now - new Date(firstPurchase)) / 86400000) : 999;
+
+    const autoLabels = [];
+    if (totalOrders >= 3)     autoLabels.push('عميل متكرر');
+    if (totalSpent  >= 500)   autoLabels.push('عميل VIP');
+    if (daysSinceLast > 30)   autoLabels.push('غائب');
+    if (daysSinceFirst <= 7)  autoLabels.push('زبون جديد');
+
+    const earnedPoints   = Math.floor(totalSpent * settings.pointsPerDollar);
+    const redeemedPoints = saved?.redeemedPoints || 0;
+    const loyaltyPoints  = Math.max(0, earnedPoints - redeemedPoints);
+
+    return {
+      id: saved?.id || key,
+      phone: data.phone,
+      name: data.name || 'عميل',
+      tags: saved?.tags || [],
+      autoLabels,
+      totalSpent,
+      totalOrders,
+      lastPurchase,
+      firstPurchase,
+      loyaltyPoints,
+      earnedPoints,
+      redeemedPoints,
+      orders: sorted
+    };
+  });
+}
+
+function setLoyaltyFilter(f) {
+  loyaltyFilter = f;
+  document.querySelectorAll('.loyalty-filter-btn').forEach(b => b.classList.remove('active'));
+  const map = { '': 'loyalty-filter-all', 'عميل متكرر': 'loyalty-filter-repeat', 'عميل VIP': 'loyalty-filter-vip', 'غائب': 'loyalty-filter-absent', 'زبون جديد': 'loyalty-filter-new' };
+  const btn = document.getElementById(map[f] || 'loyalty-filter-all');
+  if (btn) btn.classList.add('active');
+  renderLoyaltyPage();
+}
+
+function renderLoyaltyPage() {
+  const all = getStoreCustomersData();
+  const settings = db.loyaltySettings || { pointsPerDollar: 10, redeemThreshold: 100 };
+
+  // Stats
+  const statsEl = document.getElementById('loyalty-stats-grid');
+  if (statsEl) {
+    const total      = all.length;
+    const repeat     = all.filter(c => c.autoLabels.includes('عميل متكرر')).length;
+    const repeatRate = total ? Math.round(repeat / total * 100) : 0;
+    const avgOrders  = total ? (all.reduce((s, c) => s + c.totalOrders, 0) / total).toFixed(1) : 0;
+    const absent     = all.filter(c => c.autoLabels.includes('غائب')).length;
+    const totalPts   = all.reduce((s, c) => s + c.loyaltyPoints, 0);
+    statsEl.innerHTML = `
+      <div class="stat-card stat-blue"><div class="label">إجمالي العملاء</div><div class="value">${total}</div></div>
+      <div class="stat-card stat-green"><div class="label">نسبة التكرار</div><div class="value">${repeatRate}%</div><div class="sub">اشتروا 3+ مرات</div></div>
+      <div class="stat-card stat-yellow"><div class="label">متوسط الطلبات</div><div class="value">${avgOrders}</div></div>
+      <div class="stat-card stat-red"><div class="label">غائبون +30 يوم</div><div class="value">${absent}</div></div>
+      <div class="stat-card"><div class="label">نقاط الولاء</div><div class="value" style="color:var(--warning);">${totalPts.toLocaleString()}</div><div class="sub">نقطة إجمالية</div></div>
+    `;
+  }
+
+  // Settings display
+  const sEl = document.getElementById('loyalty-settings-display');
+  if (sEl) {
+    sEl.innerHTML = `
+      <div style="display:flex;gap:24px;flex-wrap:wrap;">
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">كل 1$ = نقاط</div><strong style="font-size:22px;color:var(--primary);">${settings.pointsPerDollar}</strong></div>
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">عتبة الاسترداد</div><strong style="font-size:22px;color:var(--warning);">${settings.redeemThreshold} نقطة = 1$</strong></div>
+      </div>`;
+  }
+
+  // Filter
+  const q = (document.getElementById('loyalty-search')?.value || '').toLowerCase();
+  let customers = all;
+  if (loyaltyFilter) customers = customers.filter(c => c.autoLabels.includes(loyaltyFilter) || c.tags.includes(loyaltyFilter));
+  if (q) customers = customers.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  customers.sort((a, b) => b.totalSpent - a.totalSpent);
+
+  const listEl = document.getElementById('loyalty-customers-list');
+  if (!listEl) return;
+
+  if (!customers.length) {
+    listEl.innerHTML = `<div class="empty"><div class="icon">👥</div><h4>${q || loyaltyFilter ? 'لا توجد نتائج' : 'لا يوجد عملاء بعد'}</h4><p>تُبنى قائمة العملاء تلقائياً من الطلبات ذات الأسماء والأرقام</p></div>`;
+    return;
+  }
+
+  listEl.innerHTML = customers.map(c => {
+    const autoTags   = c.autoLabels.map(t => `<span class="tag-chip tag-auto">${t}</span>`).join('');
+    const manualTags = c.tags.map(t => `<span class="tag-chip tag-manual">${t}</span>`).join('');
+    const encKey     = encodeURIComponent(JSON.stringify({ phone: c.phone, name: c.name }));
+    return `<div class="cust-card" style="margin-bottom:10px;" onclick="openCustomerDetail('${encKey}')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:var(--primary);flex-shrink:0;">${(c.name||'؟')[0]}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;margin-bottom:2px;">${c.name}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${c.phone || 'بدون رقم'} • ${c.totalOrders} طلب • ${c.totalSpent.toLocaleString()} ₪</div>
+          <div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;">${autoTags}${manualTags}</div>
+        </div>
+        <div style="text-align:center;flex-shrink:0;">
+          <span class="cust-points-badge">⭐ ${c.loyaltyPoints.toLocaleString()}</span>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">نقطة</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let currentCustomerKey = null;
+
+function openCustomerDetail(encoded) {
+  const key = JSON.parse(decodeURIComponent(encoded));
+  currentCustomerKey = key;
+
+  const all = getStoreCustomersData();
+  const c = all.find(x => (key.phone && x.phone === key.phone) || (!key.phone && x.name === key.name));
+  if (!c) return;
+
+  document.getElementById('cd-name').textContent = c.name;
+  document.getElementById('cd-phone').textContent = c.phone || 'بدون رقم واتساب';
+  document.getElementById('cd-points').textContent = c.loyaltyPoints.toLocaleString() + ' نقطة';
+  document.getElementById('cd-total-spent').textContent = c.totalSpent.toLocaleString() + ' ₪';
+  document.getElementById('cd-total-orders').textContent = c.totalOrders;
+  document.getElementById('cd-last-purchase').textContent = c.lastPurchase ? formatDate(c.lastPurchase) : '-';
+
+  // Tags
+  const encKey = encodeURIComponent(JSON.stringify(key));
+  const tagsEl = document.getElementById('cd-tags');
+  tagsEl.innerHTML = [
+    ...c.autoLabels.map(t => `<span class="tag-chip tag-auto">${t}</span>`),
+    ...c.tags.map(t => `<span class="tag-chip tag-manual">${t} <button class="tag-chip-remove" onclick="removeCustomerTag(event,'${t.replace(/'/g,'\\\'')}')" title="حذف">✕</button></span>`)
+  ].join('') + `<button class="btn btn-sm btn-outline" style="font-size:11px;" onclick="openAddTagModal()">＋ تاق</button>`;
+
+  // History
+  const histEl = document.getElementById('cd-history');
+  const grouped = {};
+  c.orders.forEach(o => { const k = o.groupId || o.id; if (!grouped[k]) grouped[k] = []; grouped[k].push(o); });
+  histEl.innerHTML = Object.values(grouped).map(items => {
+    const total = items.reduce((s, o) => s + (o.amount || 0), 0);
+    return `<div class="payment-row">
+      <div class="payment-date">${formatDate(items[0].date)}</div>
+      <div class="payment-service">${items.map(o => o.product + (o.qty > 1 ? ` ×${o.qty}` : '')).join('، ')}</div>
+      <div class="payment-amount">+${total.toLocaleString()} ${items[0].currency || ''}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">لا توجد مشتريات</div>';
+
+  openModal('modal-customer-detail');
+}
+
+function removeCustomerTag(event, tag) {
+  event.stopPropagation();
+  if (!currentCustomerKey) return;
+  const manual = db.storeCustomers || [];
+  const cust = manual.find(c =>
+    (currentCustomerKey.phone && c.phone === currentCustomerKey.phone) ||
+    (!currentCustomerKey.phone && c.name === currentCustomerKey.name)
+  );
+  if (!cust) return;
+  cust.tags = cust.tags.filter(t => t !== tag);
+  db.storeCustomers = manual;
+  saveDB();
+  openCustomerDetail(encodeURIComponent(JSON.stringify(currentCustomerKey)));
+  renderLoyaltyPage();
+}
+
+function openAddTagModal() {
+  document.getElementById('new-tag-input').value = '';
+  openModal('modal-add-tag');
+}
+
+function saveCustomerTag() {
+  const tag = document.getElementById('new-tag-input').value.trim();
+  if (!tag) return;
+  if (!currentCustomerKey) return;
+  const manual = db.storeCustomers || [];
+  let cust = manual.find(c =>
+    (currentCustomerKey.phone && c.phone === currentCustomerKey.phone) ||
+    (!currentCustomerKey.phone && c.name === currentCustomerKey.name)
+  );
+  if (!cust) {
+    cust = { id: 'cust_' + Date.now(), phone: currentCustomerKey.phone, name: currentCustomerKey.name, tags: [], redeemedPoints: 0 };
+    manual.push(cust);
+    db.storeCustomers = manual;
+  }
+  if (!cust.tags.includes(tag)) cust.tags.push(tag);
+  saveDB();
+  closeModal('modal-add-tag');
+  openCustomerDetail(encodeURIComponent(JSON.stringify(currentCustomerKey)));
+  renderLoyaltyPage();
+}
+
+function openLoyaltySettings() {
+  const s = db.loyaltySettings || { pointsPerDollar: 10, redeemThreshold: 100 };
+  document.getElementById('ls-points-per-dollar').value = s.pointsPerDollar;
+  document.getElementById('ls-redeem-threshold').value  = s.redeemThreshold;
+  openModal('modal-loyalty-settings');
+}
+
+function saveLoyaltySettings() {
+  const ppd = parseInt(document.getElementById('ls-points-per-dollar').value) || 10;
+  const rt  = parseInt(document.getElementById('ls-redeem-threshold').value)  || 100;
+  db.loyaltySettings = { pointsPerDollar: ppd, redeemThreshold: rt };
+  saveDB();
+  closeModal('modal-loyalty-settings');
+  renderLoyaltyPage();
+}
+
+// ========== WHATSAPP BROADCAST ==========
+
+let waAudience = 'all';
+
+function isWAEnabled() {
+  const sess = getSession();
+  if (!sess) return false;
+  const auth = loadAuth();
+  const client = auth.clients?.find(c => c.id === sess.clientId);
+  return !!(client?.features?.whatsapp);
+}
+
+function isWAConfigured() {
+  return !!(db.ultramsg?.instanceId && db.ultramsg?.token);
+}
+
+function getWAAudienceCustomers(aud) {
+  const all = getStoreCustomersData().filter(c => c.phone);
+  if (aud === 'all') return all;
+  return all.filter(c => c.autoLabels.includes(aud) || c.tags.includes(aud));
+}
+
+function setWAAudience(aud) {
+  waAudience = aud;
+  document.querySelectorAll('[id^="wa-aud-"]').forEach(b => b.classList.remove('active'));
+  const map = { all: 'wa-aud-all', 'عميل VIP': 'wa-aud-vip', 'عميل متكرر': 'wa-aud-repeat', 'غائب': 'wa-aud-absent', 'زبون جديد': 'wa-aud-new' };
+  const btn = document.getElementById(map[aud] || 'wa-aud-all');
+  if (btn) btn.classList.add('active');
+  const count = getWAAudienceCustomers(aud).length;
+  const el = document.getElementById('wa-audience-count');
+  if (el) el.textContent = `سيتم الإرسال لـ ${count} عميل ممن لديهم أرقام واتساب`;
+}
+
+function updateWAPreview() {
+  const text = document.getElementById('wa-message-text')?.value || '';
+  const previewBox = document.getElementById('wa-preview-box');
+  const previewContent = document.getElementById('wa-preview-content');
+  if (!text.trim()) { if (previewBox) previewBox.style.display = 'none'; return; }
+  const sample = getWAAudienceCustomers(waAudience)[0] || { name: 'محمد', loyaltyPoints: 150 };
+  const preview = text.replace(/\{اسم_الزبون\}/g, sample.name).replace(/\{رصيد_النقاط\}/g, sample.loyaltyPoints);
+  if (previewBox) previewBox.style.display = '';
+  if (previewContent) previewContent.textContent = preview;
+}
+
+async function startWABroadcast() {
+  if (!isWAConfigured()) { alert('يجب إعداد UltraMsg أولاً في الإعدادات'); return; }
+  const text = document.getElementById('wa-message-text')?.value.trim();
+  if (!text) return alert('اكتب نص الرسالة أولاً');
+  const customers = getWAAudienceCustomers(waAudience);
+  if (!customers.length) return alert('لا يوجد عملاء في هذه الفئة لديهم أرقام واتساب');
+  if (!confirm(`إرسال الرسالة لـ ${customers.length} عميل؟`)) return;
+
+  const progressEl = document.getElementById('wa-progress');
+  const sendBtn    = document.getElementById('wa-send-btn');
+  if (progressEl) progressEl.style.display = '';
+  if (sendBtn) sendBtn.disabled = true;
+
+  let sent = 0, failed = 0;
+
+  for (let i = 0; i < customers.length; i++) {
+    const c = customers[i];
+    const body = text.replace(/\{اسم_الزبون\}/g, c.name).replace(/\{رصيد_النقاط\}/g, c.loyaltyPoints);
+
+    const titleEl = document.getElementById('wa-progress-title');
+    const textEl  = document.getElementById('wa-progress-text');
+    const barEl   = document.getElementById('wa-progress-bar');
+    if (titleEl) titleEl.textContent = `جاري الإرسال إلى ${c.name}...`;
+    if (textEl)  textEl.textContent  = `${i + 1} / ${customers.length} • نجح: ${sent} • فشل: ${failed}`;
+    if (barEl)   barEl.style.width   = `${(i / customers.length * 100).toFixed(1)}%`;
+
+    try {
+      const form = new URLSearchParams({ token: db.ultramsg.token, to: c.phone, body });
+      const resp = await fetch(`https://api.ultramsg.com/${db.ultramsg.instanceId}/messages/chat`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form.toString() });
+      const result = await resp.json();
+      if (result.sent === 'true' || result.sent === true || result.id) sent++;
+      else failed++;
+    } catch(e) { failed++; }
+
+    if (i < customers.length - 1) await new Promise(r => setTimeout(r, 2000 + Math.random() * 1000));
+  }
+
+  const barEl = document.getElementById('wa-progress-bar');
+  if (barEl) barEl.style.width = '100%';
+  const titleEl = document.getElementById('wa-progress-title');
+  const textEl  = document.getElementById('wa-progress-text');
+  if (titleEl) titleEl.textContent = '✅ اكتمل الإرسال';
+  if (textEl)  textEl.textContent  = `الإجمالي: ${customers.length} • نجح: ${sent} • فشل: ${failed}`;
+  if (sendBtn) sendBtn.disabled = false;
+}
+
+function renderWABroadcastPage() {
+  const notConf = document.getElementById('wa-not-configured');
+  const ui      = document.getElementById('wa-broadcast-ui');
+  if (!notConf || !ui) return;
+  if (!isWAEnabled()) { notConf.style.display = ''; ui.style.display = 'none'; return; }
+  const configured = isWAConfigured();
+  notConf.style.display = configured ? 'none' : '';
+  ui.style.display      = configured ? '' : 'none';
+  if (configured) { setWAAudience(waAudience); updateWAPreview(); }
+}
+
+// ===== WHATSAPP SETTINGS CARD =====
+
+function renderWASettingsCard() {
+  const card = document.getElementById('wa-settings-card');
+  if (!card) return;
+  if (!isWAEnabled()) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const config = db.ultramsg || {};
+  const badge  = document.getElementById('wa-conn-badge');
+  if (badge) {
+    badge.className = config.instanceId ? 'badge badge-blue' : 'badge badge-gray';
+    badge.textContent = config.instanceId ? 'مهيأ — تحقق من الاتصال' : 'غير مهيأ';
+  }
+
+  const body = document.getElementById('wa-settings-body');
+  if (!body) return;
+  body.innerHTML = `
+    <div class="alert alert-info" style="margin-bottom:16px;">
+      <span>💡</span>
+      <div>سجّل في <strong>ultramsg.com</strong>، أنشئ instance، امسح الـ QR هناك لربط واتساب، ثم أدخل البيانات هنا.</div>
+    </div>
+    <div class="form-grid form-grid-2" style="margin-bottom:14px;">
+      <div class="form-group">
+        <label>Instance ID</label>
+        <input type="text" id="wa-instance-id" placeholder="instance12345" value="${config.instanceId || ''}" dir="ltr" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Token</label>
+        <input type="password" id="wa-token" placeholder="••••••••" value="${config.token || ''}" dir="ltr" autocomplete="off">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="saveWASettings()">💾 حفظ الإعدادات</button>
+      ${config.instanceId && config.token ? `<button class="btn btn-outline" onclick="checkWAStatus()">🔄 التحقق من الاتصال</button>` : ''}
+    </div>
+    <div id="wa-connection-status" style="margin-top:12px;display:none;"></div>
+  `;
+}
+
+function saveWASettings() {
+  const instanceId = document.getElementById('wa-instance-id')?.value.trim();
+  const token      = document.getElementById('wa-token')?.value.trim();
+  if (!instanceId || !token) return alert('أدخل Instance ID وToken');
+  if (!db.ultramsg) db.ultramsg = {};
+  db.ultramsg.instanceId = instanceId;
+  db.ultramsg.token      = token;
+  saveDB();
+  renderWASettingsCard();
+  alert('✅ تم حفظ إعدادات واتساب');
+}
+
+async function checkWAStatus() {
+  if (!db.ultramsg?.instanceId || !db.ultramsg?.token) return;
+  const statusEl = document.getElementById('wa-connection-status');
+  if (statusEl) { statusEl.style.display = ''; statusEl.innerHTML = '<span style="color:var(--text-muted)">⏳ جاري الفحص...</span>'; }
+  try {
+    const resp = await fetch(`https://api.ultramsg.com/${db.ultramsg.instanceId}/instance/status?token=${encodeURIComponent(db.ultramsg.token)}`);
+    const data = await resp.json();
+    const sub = data?.status?.accountStatus?.substatus || data?.accountStatus?.substatus || '';
+    const connected = sub === 'connected' || sub === 'open';
+    if (statusEl) statusEl.innerHTML = connected
+      ? '<span class="badge badge-green">✅ واتساب متصل بنجاح</span>'
+      : `<span class="badge badge-red">❌ غير متصل (${sub || 'تحقق من الـ QR في ultramsg.com'})</span>`;
+    const badge = document.getElementById('wa-conn-badge');
+    if (badge) { badge.className = connected ? 'badge badge-green' : 'badge badge-red'; badge.textContent = connected ? 'متصل' : 'غير متصل'; }
+  } catch(e) {
+    if (statusEl) statusEl.innerHTML = '<span class="badge badge-red">❌ فشل الاتصال — تحقق من البيانات</span>';
+  }
+}
+
+// ===== SA: TOGGLE WHATSAPP FEATURE =====
+
+function toggleWhatsAppFeature(clientId) {
+  const auth = loadAuth();
+  const c = auth.clients.find(x => x.id === clientId);
+  if (!c) return;
+  if (!c.features) c.features = {};
+  c.features.whatsapp = !c.features.whatsapp;
+  saveAuth(auth);
+  renderSAPanel();
+}
+
+// Show/hide WhatsApp nav item based on session & current system
+function updateWANavVisibility() {
+  const navEl = document.getElementById('nav-wa-broadcast');
+  if (!navEl) return;
+  navEl.style.display = (currentSystem === 'store' && isWAEnabled()) ? '' : 'none';
 }
 
 // ========== INIT ==========
