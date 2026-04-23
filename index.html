@@ -5857,7 +5857,26 @@ function isWAConfigured() {
 function getWAAudienceCustomers(aud) {
   const all = getStoreCustomersData().filter(c => c.phone);
   if (aud === 'all') return all;
-  return all.filter(c => c.autoLabels.includes(aud) || c.tags.includes(aud));
+
+  // Map audience names to manual tag synonyms
+  const synonyms = {
+    'عميل VIP': ['VIP', 'vip', 'vip client', 'عميل VIP'],
+    'عميل متكرر': ['متكرر', 'عميل متكرر'],
+    'غائب': ['غائب', 'absent'],
+    'زبون جديد': ['جديد', 'زبون جديد', 'new']
+  };
+
+  const searchTerms = synonyms[aud] || [aud];
+
+  return all.filter(c => {
+    // Check auto labels (exact match)
+    const hasAuto = c.autoLabels.includes(aud);
+    // Check manual tags (case-insensitive and handle synonyms)
+    const hasManual = c.tags.some(tag => 
+      searchTerms.some(term => tag.trim().toLowerCase() === term.toLowerCase())
+    );
+    return hasAuto || hasManual;
+  });
 }
 
 function setWAAudience(aud) {
