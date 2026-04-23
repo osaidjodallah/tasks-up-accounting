@@ -1479,12 +1479,8 @@
       <div class="card" style="margin-bottom:14px;">
         <div class="card-header"><h3>1️⃣ اختر الجمهور</h3></div>
         <div class="card-body">
-          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
-            <button class="btn btn-sm btn-outline loyalty-filter-btn active" id="wa-aud-all" onclick="setWAAudience('all')">الكل</button>
-            <button class="btn btn-sm btn-outline loyalty-filter-btn" id="wa-aud-vip" onclick="setWAAudience('عميل VIP')">👑 VIP</button>
-            <button class="btn btn-sm btn-outline loyalty-filter-btn" id="wa-aud-repeat" onclick="setWAAudience('عميل متكرر')">🔁 متكرر</button>
-            <button class="btn btn-sm btn-outline loyalty-filter-btn" id="wa-aud-absent" onclick="setWAAudience('غائب')">😴 غائب</button>
-            <button class="btn btn-sm btn-outline loyalty-filter-btn" id="wa-aud-new" onclick="setWAAudience('زبون جديد')">🆕 جديد</button>
+          <div id="wa-audience-buttons" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+            <button class="btn btn-sm btn-outline loyalty-filter-btn active" onclick="setWAAudience('all')">الكل</button>
           </div>
           <div id="wa-audience-count" style="font-size:13px; color:var(--text-muted); background:var(--bg); padding:8px 12px; border-radius:8px;">سيتم الإرسال لـ 0 عميل</div>
         </div>
@@ -5881,10 +5877,13 @@ function getWAAudienceCustomers(aud) {
 
 function setWAAudience(aud) {
   waAudience = aud;
-  document.querySelectorAll('[id^="wa-aud-"]').forEach(b => b.classList.remove('active'));
-  const map = { all: 'wa-aud-all', 'عميل VIP': 'wa-aud-vip', 'عميل متكرر': 'wa-aud-repeat', 'غائب': 'wa-aud-absent', 'زبون جديد': 'wa-aud-new' };
-  const btn = document.getElementById(map[aud] || 'wa-aud-all');
-  if (btn) btn.classList.add('active');
+  // Update UI classes for buttons
+  document.querySelectorAll('.loyalty-filter-btn').forEach(btn => {
+    const clickAttr = btn.getAttribute('onclick') || '';
+    if (clickAttr.includes(`'${aud}'`)) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+
   const count = getWAAudienceCustomers(aud).length;
   const el = document.getElementById('wa-audience-count');
   if (el) el.textContent = `سيتم الإرسال لـ ${count} عميل ممن لديهم أرقام واتساب`;
@@ -5955,7 +5954,41 @@ function renderWABroadcastPage() {
   const configured = isWAConfigured();
   notConf.style.display = configured ? 'none' : '';
   ui.style.display      = configured ? '' : 'none';
-  if (configured) { setWAAudience(waAudience); updateWAPreview(); }
+
+  if (configured) {
+    // Dynamically build audience buttons based on actual tags in DB
+    const btnContainer = document.getElementById('wa-audience-buttons');
+    if (btnContainer) {
+      const customers = getStoreCustomersData().filter(c => c.phone);
+      const allTags = new Set();
+      customers.forEach(c => {
+        c.autoLabels.forEach(l => allTags.add(l));
+        c.tags.forEach(t => allTags.add(t));
+      });
+
+      let html = `<button class="btn btn-sm btn-outline loyalty-filter-btn ${waAudience === 'all' ? 'active' : ''}" onclick="setWAAudience('all')">الكل</button>`;
+
+      // Default categories first
+      const defaults = ['عميل VIP', 'عميل متكرر', 'غائب', 'زبون جديد'];
+      const icons = { 'عميل VIP': '👑', 'عميل متكرر': '🔁', 'غائب': '😴', 'زبون جديد': '🆕' };
+      defaults.forEach(d => {
+        if (allTags.has(d)) {
+          html += `<button class="btn btn-sm btn-outline loyalty-filter-btn ${waAudience === d ? 'active' : ''}" onclick="setWAAudience('${d}')">${icons[d] || ''} ${d.replace('عميل ', '')}</button>`;
+          allTags.delete(d);
+        }
+      });
+
+      // Other manual tags
+      Array.from(allTags).sort().forEach(t => {
+        html += `<button class="btn btn-sm btn-outline loyalty-filter-btn ${waAudience === t ? 'active' : ''}" onclick="setWAAudience('${t}')">🏷 ${t}</button>`;
+      });
+
+      btnContainer.innerHTML = html;
+    }
+
+    setWAAudience(waAudience);
+    updateWAPreview();
+  }
 }
 
 // ===== WHATSAPP SETTINGS CARD =====
