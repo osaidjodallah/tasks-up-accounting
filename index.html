@@ -2018,6 +2018,12 @@
               <input type="number" id="ec-services" min="0" max="20">
             </div>
           </div>
+          <div class="form-grid form-grid-2" style="margin-top:10px;">
+            <div class="form-group" style="margin:0;">
+              <label>🎮 حسابات Clix</label>
+              <input type="number" id="ec-clix" min="0" max="20" value="0">
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label>ملاحظة</label>
@@ -3032,6 +3038,7 @@ function openEditClientSA(clientId) {
   document.getElementById('ec-password').value = '';
   document.getElementById('ec-stores').value = c.allowance?.stores ?? 0;
   document.getElementById('ec-services').value = c.allowance?.services ?? 0;
+  document.getElementById('ec-clix').value = c.allowance?.clix ?? 0;
   document.getElementById('ec-note').value = c.note || '';
   openModal('modal-edit-client-sa');
 }
@@ -3045,6 +3052,7 @@ async function saveEditClientAccount() {
   const newPwd   = document.getElementById('ec-password').value;
   const newStores = parseInt(document.getElementById('ec-stores').value) || 0;
   const newSvcs   = parseInt(document.getElementById('ec-services').value) || 0;
+  const newClix   = parseInt(document.getElementById('ec-clix').value) || 0;
   if (!newName || !newEmail) return alert('الاسم والإيميل مطلوبان');
   c.name = newName; c.email = newEmail;
   c.note = document.getElementById('ec-note').value.trim();
@@ -3052,11 +3060,14 @@ async function saveEditClientAccount() {
   // Adjust account slots (add if more, keep existing if less)
   const curStores = c.accounts.filter(a=>a.type==='store');
   const curSvcs   = c.accounts.filter(a=>a.type==='services');
+  const curClix   = c.accounts.filter(a=>a.type==='clix');
   const addStores = newStores - curStores.length;
   const addSvcs   = newSvcs   - curSvcs.length;
-  for (let i = 0; i < addStores; i++) c.accounts.push({ id:'acc_'+Date.now()+'_'+i+'s', type:'store', name:`متجر ${curStores.length+i+1}`, createdAt:new Date().toISOString() });
-  for (let i = 0; i < addSvcs;   i++) c.accounts.push({ id:'acc_'+Date.now()+'_'+i+'v', type:'services', name:`خدمات ${curSvcs.length+i+1}`, createdAt:new Date().toISOString() });
-  // Remove excess (from end, only if no data)
+  const addClix   = newClix   - curClix.length;
+  for (let i = 0; i < addStores; i++) c.accounts.push({ id:'acc_'+Date.now()+'_'+i+'s', type:'store',    name:`متجر ${curStores.length+i+1}`,  createdAt:new Date().toISOString() });
+  for (let i = 0; i < addSvcs;   i++) c.accounts.push({ id:'acc_'+Date.now()+'_'+i+'v', type:'services', name:`خدمات ${curSvcs.length+i+1}`,   createdAt:new Date().toISOString() });
+  for (let i = 0; i < addClix;   i++) c.accounts.push({ id:'acc_'+Date.now()+'_'+i+'c', type:'clix',     name: curClix.length+i===0 ? 'Clix' : `Clix ${curClix.length+i+1}`, createdAt:new Date().toISOString() });
+  // Remove excess (from end)
   if (addStores < 0) {
     let rem = Math.abs(addStores);
     while (rem-- > 0) { const last = c.accounts.filter(a=>a.type==='store').pop(); if (last) c.accounts = c.accounts.filter(a=>a.id!==last.id); }
@@ -3065,7 +3076,11 @@ async function saveEditClientAccount() {
     let rem = Math.abs(addSvcs);
     while (rem-- > 0) { const last = c.accounts.filter(a=>a.type==='services').pop(); if (last) c.accounts = c.accounts.filter(a=>a.id!==last.id); }
   }
-  c.allowance = { stores: newStores, services: newSvcs };
+  if (addClix < 0) {
+    let rem = Math.abs(addClix);
+    while (rem-- > 0) { const last = c.accounts.filter(a=>a.type==='clix').pop(); if (last) c.accounts = c.accounts.filter(a=>a.id!==last.id); }
+  }
+  c.allowance = { stores: newStores, services: newSvcs, clix: newClix };
   saveAuth(auth);
   closeModal('modal-edit-client-sa');
   renderSAPanel();
