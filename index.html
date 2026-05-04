@@ -450,6 +450,19 @@
   .acc-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
   .acc-icon-services { background: #eef2ff; }
   .acc-icon-store { background: #d1fae5; }
+  .acc-icon-clix { background: #fce7f3; }
+
+  /* Clix status badges */
+  .clix-badge-pending  { background:#fef3c7; color:#92400e; border-radius:6px; padding:2px 10px; font-size:12px; font-weight:600; }
+  .clix-badge-delivered{ background:#d1fae5; color:#065f46; border-radius:6px; padding:2px 10px; font-size:12px; font-weight:600; }
+  .clix-badge-paid     { background:#dbeafe; color:#1e40af; border-radius:6px; padding:2px 10px; font-size:12px; font-weight:600; }
+  .clix-badge-unpaid   { background:#fee2e2; color:#991b1b; border-radius:6px; padding:2px 10px; font-size:12px; font-weight:600; }
+  .clix-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; transition:box-shadow .15s; }
+  .clix-card:hover { box-shadow: 0 3px 14px rgba(0,0,0,.09); }
+  .clix-field { font-size:12px; color:var(--text-muted); margin-bottom:3px; }
+  .clix-field strong { color:var(--text); font-size:13px; }
+  .clix-tab-btn { padding:7px 18px; border-radius:8px; border:1px solid var(--border); background:var(--bg); font-size:13px; cursor:pointer; font-family:inherit; }
+  .clix-tab-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); font-weight:600; }
   .acc-info { flex: 1; }
   .acc-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
   .acc-type { font-size: 12px; color: var(--text-muted); }
@@ -732,6 +745,7 @@
   <div class="system-switcher">
     <button class="sys-btn active" id="sys-accounting" onclick="switchSystem('accounting')">💼 المحاسبة</button>
     <button class="sys-btn" id="sys-store" onclick="switchSystem('store')">🛒 المتجر</button>
+    <button class="sys-btn" id="sys-clix" onclick="switchSystem('clix')" style="display:none;">🎮 Clix</button>
   </div>
 
   <!-- Accounting Nav -->
@@ -789,6 +803,17 @@
     </a>
     <a class="nav-item" id="nav-wa-broadcast" onclick="showPage('wa-broadcast')" href="#" style="display:none">
       <span class="icon">📱</span> إرسال واتساب
+    </a>
+    <a class="nav-item" onclick="showPage('settings')" href="#">
+      <span class="icon">🗂</span> الحسابات والصلاحيات
+    </a>
+  </div>
+
+  <!-- Clix Nav -->
+  <div id="nav-clix" style="display:none">
+    <div class="nav-section">Clix</div>
+    <a class="nav-item" id="nav-clix-orders" onclick="showPage('clix-orders')" href="#">
+      <span class="icon">🎮</span> الطلبات
     </a>
     <a class="nav-item" onclick="showPage('settings')" href="#">
       <span class="icon">🗂</span> الحسابات والصلاحيات
@@ -1390,6 +1415,37 @@
     </div>
   </div>
 
+  <!-- ======== CLIX: ORDERS ======== -->
+  <div class="page" id="page-clix-orders">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h1>🎮 طلبات Clix</h1>
+        <p>إدارة طلبات الاشتراكات والألعاب</p>
+      </div>
+      <button class="btn btn-primary perm-hide-if-view" data-perm="orders" onclick="openAddClixOrderModal()">＋ طلب جديد</button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="clix-tab-btn active" id="clix-tab-pending"   onclick="setClixTab('pending')">⏳ معلق</button>
+      <button class="clix-tab-btn"        id="clix-tab-delivered" onclick="setClixTab('delivered')">✅ تم الاستلام</button>
+    </div>
+
+    <!-- Paid filter (only for delivered tab) -->
+    <div id="clix-paid-filter" style="display:none;margin-bottom:12px;gap:6px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:12px;font-weight:600;color:var(--text-muted);">الدفع:</span>
+      <button class="clix-tab-btn active" id="clix-pay-all"     onclick="setClixPayFilter('all')">الكل</button>
+      <button class="clix-tab-btn"        id="clix-pay-paid"    onclick="setClixPayFilter('paid')">مدفوع</button>
+      <button class="clix-tab-btn"        id="clix-pay-unpaid"  onclick="setClixPayFilter('unpaid')">غير مدفوع</button>
+    </div>
+
+    <!-- Search -->
+    <input type="text" id="clix-search" placeholder="🔍 ابحث بالاسم أو الجهاز أو اللعبة..." oninput="renderClixOrders()"
+      style="width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;direction:rtl;box-sizing:border-box;margin-bottom:12px;">
+
+    <div id="clix-orders-list" style="display:grid;gap:10px;"></div>
+  </div>
+
   <!-- ======== SETTINGS PAGE ======== -->
   <div class="page" id="page-settings">
     <div class="page-header">
@@ -1906,6 +1962,12 @@
               <input type="number" id="cc-services" value="0" min="0" max="20">
             </div>
           </div>
+          <div class="form-grid form-grid-2" style="margin-top:10px;">
+            <div class="form-group" style="margin:0;">
+              <label>🎮 حسابات Clix</label>
+              <input type="number" id="cc-clix" value="0" min="0" max="20">
+            </div>
+          </div>
           <div style="font-size:11px; color:var(--danger); margin-top:8px; font-weight:600;">⚠️ حدد نوع وعدد الحسابات بدقة — صفر = لا يُسمح بهذا النوع</div>
         </div>
         <div class="form-group">
@@ -2016,6 +2078,7 @@
             <select id="modal-new-acc-type">
               <option value="services">💼 خدمات تسويقية</option>
               <option value="store">🛒 متجر إلكتروني</option>
+              <option value="clix">🎮 Clix</option>
             </select>
           </div>
         </div>
@@ -2024,6 +2087,109 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-accounts')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== MODAL: ADD CLIX ORDER ======== -->
+<div class="modal-overlay" id="modal-add-clix-order">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <h3>🎮 إضافة طلب Clix</h3>
+      <button class="modal-close" onclick="closeModal('modal-add-clix-order')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <!-- Row 1 -->
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>التاريخ *</label>
+            <input type="date" id="cx-date">
+          </div>
+          <div class="form-group">
+            <label>رقم الاشتراك</label>
+            <input type="text" id="cx-subscription-id" placeholder="مثال: 123456" dir="ltr" autocomplete="off">
+          </div>
+        </div>
+        <!-- Row 2 -->
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>اسم المشترك *</label>
+            <input type="text" id="cx-subscriber-name" placeholder="اسم الزبون" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>رقم المشترك</label>
+            <input type="text" id="cx-subscriber-phone" placeholder="05XXXXXXXX" dir="ltr" autocomplete="off">
+          </div>
+        </div>
+        <!-- Row 3 -->
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>اسم اللعبة / الاشتراك *</label>
+            <input type="text" id="cx-game-name" placeholder="مثال: PS Plus, FIFA..." autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>نوع الجهاز</label>
+            <select id="cx-device-type">
+              <option value="">-- اختر --</option>
+              <option value="PS4">PS4</option>
+              <option value="PS5">PS5</option>
+              <option value="Xbox One">Xbox One</option>
+              <option value="Xbox Series X">Xbox Series X</option>
+              <option value="PC">PC</option>
+              <option value="Mobile">Mobile</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+        </div>
+        <!-- Row 4 -->
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>المبلغ</label>
+            <input type="number" id="cx-amount" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>طريقة الدفع</label>
+            <select id="cx-payment-method">
+              <option value="">-- اختر --</option>
+              <option value="كاش">كاش</option>
+              <option value="تحويل">تحويل بنكي</option>
+              <option value="PayPal">PayPal</option>
+              <option value="بطاقة">بطاقة ائتمانية</option>
+              <option value="آجل">آجل</option>
+            </select>
+          </div>
+        </div>
+        <!-- Row 5: Credentials -->
+        <div style="background:var(--primary-light);border-radius:10px;padding:12px;margin-top:4px;">
+          <div style="font-size:12px;font-weight:600;color:var(--primary-dark);margin-bottom:10px;">🔐 بيانات الحساب</div>
+          <div class="form-grid form-grid-2">
+            <div class="form-group" style="margin:0;">
+              <label>الإيميل</label>
+              <input type="email" id="cx-email" placeholder="account@email.com" dir="ltr" autocomplete="off">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>كلمة السر</label>
+              <input type="text" id="cx-password" placeholder="كلمة المرور" dir="ltr" autocomplete="off">
+            </div>
+          </div>
+        </div>
+        <!-- Row 6: Times -->
+        <div class="form-grid form-grid-2" style="margin-top:4px;">
+          <div class="form-group">
+            <label>وقت المشترك عند الجهاز</label>
+            <input type="datetime-local" id="cx-subscriber-time">
+          </div>
+          <div class="form-group">
+            <label>وقت رفع الطلب (المبيعات)</label>
+            <input type="datetime-local" id="cx-sales-time">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-clix-order')">إلغاء</button>
+      <button class="btn btn-primary" onclick="addClixOrder()">＋ حفظ الطلب</button>
     </div>
   </div>
 </div>
@@ -2796,11 +2962,12 @@ function renderSAPanel() {
   listEl.innerHTML = clients.map(c => {
     const stores = (c.accounts||[]).filter(a=>a.type==='store').length;
     const svcs   = (c.accounts||[]).filter(a=>a.type==='services').length;
+    const clixC  = (c.accounts||[]).filter(a=>a.type==='clix').length;
     return `<div style="background:white;border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;">
       <div style="width:44px;height:44px;border-radius:12px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--primary);flex-shrink:0;">${c.name[0]}</div>
       <div style="flex:1;">
         <div style="font-size:15px;font-weight:700;">${c.name}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${c.email} • ${stores} متجر • ${svcs} خدمات • ${(c.employees||[]).length} موظف</div>
+        <div style="font-size:12px;color:var(--text-muted);">${c.email} • ${stores} متجر • ${svcs} خدمات${clixC ? ` • ${clixC} Clix` : ''} • ${(c.employees||[]).length} موظف</div>
         ${c.note ? `<div style="font-size:11px;color:var(--primary);margin-top:2px;">📝 ${c.note}</div>` : ''}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -2819,9 +2986,10 @@ async function createClientAccount() {
   const pwd   = document.getElementById('cc-password').value;
   const stores = parseInt(document.getElementById('cc-stores').value) || 0;
   const svcs   = parseInt(document.getElementById('cc-services').value) || 0;
+  const clix   = parseInt(document.getElementById('cc-clix').value) || 0;
   const note   = document.getElementById('cc-note').value.trim();
   if (!name || !email || !pwd) return alert('أدخل الاسم والإيميل وكلمة المرور');
-  if (stores + svcs === 0) return alert('حدد على الأقل حساباً واحداً (متجر أو خدمات)');
+  if (stores + svcs + clix === 0) return alert('حدد على الأقل حساباً واحداً');
   const auth = await syncAuth();
   if ((auth.clients||[]).find(c => c.email.toLowerCase() === email)) return alert('هذا البريد الإلكتروني موجود مسبقاً');
   const hash = await hashPwd(pwd);
@@ -2829,7 +2997,8 @@ async function createClientAccount() {
   const accounts = [];
   for (let i = 0; i < stores; i++) accounts.push({ id: 'acc_'+Date.now()+'_'+i+'s', type:'store', name: stores===1 ? 'متجري' : `متجر ${i+1}`, createdAt: new Date().toISOString() });
   for (let i = 0; i < svcs; i++) accounts.push({ id: 'acc_'+Date.now()+'_'+i+'v', type:'services', name: svcs===1 ? 'حساب الخدمات' : `خدمات ${i+1}`, createdAt: new Date().toISOString() });
-  const client = { id: clientId, name, email, hash, allowance:{stores,services:svcs}, accounts, employees:[], note, createdAt: new Date().toISOString() };
+  for (let i = 0; i < clix; i++) accounts.push({ id: 'acc_'+Date.now()+'_'+i+'c', type:'clix', name: clix===1 ? 'Clix' : `Clix ${i+1}`, createdAt: new Date().toISOString() });
+  const client = { id: clientId, name, email, hash, allowance:{stores,services:svcs,clix}, accounts, employees:[], note, createdAt: new Date().toISOString() };
   if (!auth.clients) auth.clients = [];
   auth.clients.push(client);
   saveAuth(auth);
@@ -2847,6 +3016,7 @@ async function createClientAccount() {
   ['cc-name','cc-email','cc-password','cc-note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('cc-stores').value = '0';
   document.getElementById('cc-services').value = '1';
+  document.getElementById('cc-clix').value = '0';
   closeModal('modal-create-client');
   renderSAPanel();
 }
@@ -2954,10 +3124,10 @@ function renderClientAccountPicker(client, sess) {
   if (!accounts.length) { listEl.innerHTML = '<div class="empty"><p>لا توجد حسابات متاحة لك</p></div>'; return; }
   listEl.innerHTML = accounts.map(a => `
     <div class="acc-item" onclick="selectAccount('${a.id}')">
-      <div class="acc-icon ${a.type==='store' ? 'acc-icon-store' : 'acc-icon-services'}">${a.type==='store' ? '🛒' : '💼'}</div>
+      <div class="acc-icon ${a.type==='store' ? 'acc-icon-store' : a.type==='clix' ? 'acc-icon-clix' : 'acc-icon-services'}">${a.type==='store' ? '🛒' : a.type==='clix' ? '🎮' : '💼'}</div>
       <div class="acc-info" style="flex:1;">
         <div class="acc-name" id="accname-${a.id}">${a.name}</div>
-        <div class="acc-type">${a.type==='store' ? 'متجر إلكتروني' : 'خدمات تسويقية'}</div>
+        <div class="acc-type">${a.type==='store' ? 'متجر إلكتروني' : a.type==='clix' ? 'Clix' : 'خدمات تسويقية'}</div>
       </div>
       ${sess.currentAccountId === a.id ? '<span class="badge badge-green">نشط</span>' : ''}
       ${sess.type !== 'employee' ? `<button class="btn-icon" onclick="event.stopPropagation(); openRenameAccount('${a.id}','${a.name.replace(/'/g,"\\'")}')">✏️</button>` : ''}
@@ -2995,6 +3165,7 @@ async function enterMainApp(acc) {
   const backBtn = document.getElementById('sa-back-btn');
   if (backBtn) backBtn.classList.toggle('show', !!sess.superAdminMode);
   if (acc?.type === 'store') { currentSystem = 'store'; await switchSystem('store'); }
+  else if (acc?.type === 'clix') { currentSystem = 'clix'; await switchSystem('clix'); }
   else { currentSystem = 'accounting'; await switchSystem('accounting'); }
 }
 
@@ -3035,6 +3206,7 @@ async function loadCurrentAccount() {
   if (!db.expenseCategories) db.expenseCategories = [];
   if (!db.storeCustomers) db.storeCustomers = [];
   if (!db.loyaltySettings) db.loyaltySettings = { pointsPerDollar: 10, redeemThreshold: 100 };
+  if (!db.clixOrders) db.clixOrders = [];
 }
 function saveDB() {
   const sess = getSession();
@@ -3062,15 +3234,15 @@ function updateUIForSession(clientArg, accArg) {
   const acc    = accArg    || client?.accounts?.find(a => a.id === sess.currentAccountId);
   const isClient = sess.type === 'client';
   document.getElementById('sidebar-acc-name').textContent = acc ? acc.name : '—';
-  document.getElementById('sidebar-acc-type').textContent = acc ? (acc.type==='store' ? '🛒 متجر إلكتروني' : '💼 خدمات تسويقية') : '';
+  document.getElementById('sidebar-acc-type').textContent = acc ? (acc.type==='store' ? '🛒 متجر إلكتروني' : acc.type==='clix' ? '🎮 Clix' : '💼 خدمات تسويقية') : '';
   const initials = (sess.name||'؟').trim().split(' ').map(w=>w[0]).join('').slice(0,2);
   document.getElementById('sidebar-user-avatar').textContent = initials;
   document.getElementById('sidebar-user-name').textContent = sess.name;
   document.getElementById('sidebar-user-role').textContent = sess.type==='employee' ? 'موظف' : 'مالك';
   document.getElementById('nav-admin').style.display = isClient ? '' : 'none';
   document.getElementById('ctx-acc-name').textContent = acc ? acc.name : '—';
-  document.getElementById('ctx-acc-type').textContent = acc ? (acc.type==='store' ? '🛒 متجر إلكتروني' : '💼 خدمات تسويقية') : '';
-  document.getElementById('ctx-icon').textContent = acc?.type==='store' ? '🛒' : '💼';
+  document.getElementById('ctx-acc-type').textContent = acc ? (acc.type==='store' ? '🛒 متجر إلكتروني' : acc.type==='clix' ? '🎮 Clix' : '💼 خدمات تسويقية') : '';
+  document.getElementById('ctx-icon').textContent = acc?.type==='store' ? '🛒' : acc?.type==='clix' ? '🎮' : '💼';
   document.getElementById('ctx-user-name').textContent = sess.name;
   document.getElementById('mobile-acc-name').textContent = acc ? acc.name : 'Tasksup';
 
@@ -3079,17 +3251,20 @@ function updateUIForSession(clientArg, accArg) {
     const accessible = getAccessibleAccounts(client, sess);
     const hasStore    = accessible.some(a => a.type === 'store');
     const hasServices = accessible.some(a => a.type === 'services');
+    const hasClix     = accessible.some(a => a.type === 'clix');
     const canSwitch   = accessible.length > 1;
-    // System type switcher (show only when user has both types)
+    // System type switcher (show only when user has multiple types)
     const switcher = document.querySelector('.system-switcher');
-    if (switcher) switcher.style.display = (hasStore && hasServices) ? 'flex' : 'none';
+    if (switcher) switcher.style.display = (hasStore || hasServices || hasClix) && accessible.length > 1 ? 'flex' : 'none';
+    const clixBtn = document.getElementById('sys-clix');
+    if (clixBtn) clixBtn.style.display = hasClix ? '' : 'none';
     // Context bar switch button
     const ctxSwitch = document.querySelector('.context-bar .btn');
     if (ctxSwitch) ctxSwitch.style.display = canSwitch ? '' : 'none';
     // Sidebar account area hint
     const sidebarAcc = document.getElementById('sidebar-acc-type');
     if (sidebarAcc) {
-      const accType = acc ? (acc.type==='store' ? '🛒 متجر إلكتروني' : '💼 خدمات تسويقية') : '';
+      const accType = acc ? (acc.type==='store' ? '🛒 متجر إلكتروني' : acc.type==='clix' ? '🎮 Clix' : '💼 خدمات تسويقية') : '';
       sidebarAcc.textContent = canSwitch ? accType + ' • اضغط للتبديل ↕' : accType;
     }
     // Sidebar account area clickable only if multiple accounts
@@ -3131,6 +3306,8 @@ function applyPermissions() {
     const acc = client?.accounts?.find(a=>a.id===sess.currentAccountId);
     const pages = acc?.type==='store'
       ? { 'store-orders':'orders','store-analysis':'analysis','store-products':'settings','store-profit':'analysis', 'loyalty':'clients', 'wa-broadcast':'whatsapp' }
+      : acc?.type==='clix'
+      ? { 'clix-orders':'orders' }
       : { 'clients':'clients','payments-due':'payments', 'expenses':'expenses','services':'settings' };
     Object.entries(pages).forEach(([pg,perm]) => {
       const el = document.querySelector(`.nav-item[onclick="showPage('${pg}')"]`);
@@ -3217,8 +3394,8 @@ function renderAccountsModal() {
   if (!el||!client) return;
   el.innerHTML = client.accounts.map(a => `
     <div class="emp-card" style="margin-bottom:8px;">
-      <div class="acc-icon ${a.type==='store'?'acc-icon-store':'acc-icon-services'}" style="width:38px;height:38px;border-radius:8px;">${a.type==='store'?'🛒':'💼'}</div>
-      <div class="emp-info"><div class="emp-name">${a.name}</div><div class="emp-email">${a.type==='store'?'متجر إلكتروني':'خدمات تسويقية'}</div></div>
+      <div class="acc-icon ${a.type==='store'?'acc-icon-store':a.type==='clix'?'acc-icon-clix':'acc-icon-services'}" style="width:38px;height:38px;border-radius:8px;">${a.type==='store'?'🛒':a.type==='clix'?'🎮':'💼'}</div>
+      <div class="emp-info"><div class="emp-name">${a.name}</div><div class="emp-email">${a.type==='store'?'متجر إلكتروني':a.type==='clix'?'Clix':'خدمات تسويقية'}</div></div>
       ${sess.currentAccountId===a.id ? '<span class="badge badge-green">نشط</span>' : `<button class="btn btn-sm btn-outline" onclick="selectAccount('${a.id}');closeModal('modal-accounts');">فتح</button>`}
     </div>`).join('');
 }
@@ -3231,13 +3408,16 @@ function createAccountFromModal() {
   const auth = loadAuth();
   const client = auth.clients?.find(c => c.id === sess.clientId);
   if (!client) return;
-  const allowance = client.allowance || { stores: 999, services: 999 };
+  const allowance = client.allowance || { stores: 999, services: 999, clix: 999 };
   const maxStores = allowance.stores ?? 999;
   const maxSvcs   = allowance.services ?? 999;
+  const maxClix   = allowance.clix ?? 999;
   const curStores = client.accounts.filter(a => a.type === 'store').length;
   const curSvcs   = client.accounts.filter(a => a.type === 'services').length;
+  const curClix   = client.accounts.filter(a => a.type === 'clix').length;
   if (type === 'store' && curStores >= maxStores) return alert(`غير مسموح بإضافة متاجر. الحد المسموح: ${maxStores}`);
   if (type === 'services' && curSvcs >= maxSvcs) return alert(`وصلت للحد الأقصى من حسابات الخدمات. الحد المسموح: ${maxSvcs}`);
+  if (type === 'clix' && curClix >= maxClix) return alert(`وصلت للحد الأقصى من حسابات Clix. الحد المسموح: ${maxClix}`);
   const newAcc = { id: 'acc_' + Date.now(), type, name, createdAt: new Date().toISOString() };
   client.accounts.push(newAcc);
   saveAuth(auth);
@@ -3271,23 +3451,26 @@ function renderSettingsPage() {
       const allowance = client.allowance || {};
       const usedStores = (client.accounts||[]).filter(a=>a.type==='store').length;
       const usedSvcs   = (client.accounts||[]).filter(a=>a.type==='services').length;
+      const usedClix   = (client.accounts||[]).filter(a=>a.type==='clix').length;
       const maxStores  = allowance.stores ?? 999;
       const maxSvcs    = allowance.services ?? 999;
+      const maxClix    = allowance.clix ?? 999;
       let quotaHtml = '';
       if (sess.type !== 'employee') {
         quotaHtml = `<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
           <span class="badge badge-blue">🛒 متاجر: ${usedStores} / ${maxStores === 999 ? '∞' : maxStores}</span>
           <span class="badge badge-blue">💼 خدمات: ${usedSvcs} / ${maxSvcs === 999 ? '∞' : maxSvcs}</span>
+          ${usedClix > 0 || maxClix < 999 ? `<span class="badge badge-blue">🎮 Clix: ${usedClix} / ${maxClix === 999 ? '∞' : maxClix}</span>` : ''}
         </div>`;
       }
       listEl.innerHTML = quotaHtml + accounts.map(a => {
         const isActive = sess.currentAccountId === a.id;
         return `<div style="border-bottom:1px solid var(--border);">
           <div style="display:flex;align-items:center;gap:12px;padding:12px 0;">
-            <div class="acc-icon ${a.type==='store'?'acc-icon-store':'acc-icon-services'}" style="width:42px;height:42px;border-radius:10px;flex-shrink:0;">${a.type==='store'?'🛒':'💼'}</div>
+            <div class="acc-icon ${a.type==='store'?'acc-icon-store':a.type==='clix'?'acc-icon-clix':'acc-icon-services'}" style="width:42px;height:42px;border-radius:10px;flex-shrink:0;">${a.type==='store'?'🛒':a.type==='clix'?'🎮':'💼'}</div>
             <div style="flex:1;">
               <div style="font-weight:600;font-size:14px;">${a.name}</div>
-              <div style="font-size:12px;color:var(--text-muted);">${a.type==='store'?'متجر إلكتروني':'خدمات تسويقية'}</div>
+              <div style="font-size:12px;color:var(--text-muted);">${a.type==='store'?'متجر إلكتروني':a.type==='clix'?'Clix':'خدمات تسويقية'}</div>
             </div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
               ${isActive ? '<span class="badge badge-green">نشط الآن</span>' : `<button class="btn btn-sm btn-outline" onclick="selectAccount('${a.id}')">🔄 دخول</button>`}
@@ -4068,7 +4251,8 @@ function getDefaultDB() {
     store: { products: [], orders: [] },
     expenseCategories: [],
     storeCustomers: [],
-    loyaltySettings: { pointsPerDollar: 10, redeemThreshold: 100 }
+    loyaltySettings: { pointsPerDollar: 10, redeemThreshold: 100 },
+    clixOrders: []
   };
 }
 
@@ -4123,6 +4307,7 @@ function refreshPage(name) {
   if (name === 'invoices') renderInvoicesPage();
   if (name === 'loyalty') renderLoyaltyPage();
   if (name === 'wa-broadcast') renderWABroadcastPage();
+  if (name === 'clix-orders') renderClixOrders();
   updateDueBadge();
 }
 
@@ -5011,11 +5196,13 @@ async function switchSystem(sys) {
   currentSystem = sys;
   document.getElementById('sys-accounting').classList.toggle('active', sys === 'accounting');
   document.getElementById('sys-store').classList.toggle('active', sys === 'store');
+  document.getElementById('sys-clix').classList.toggle('active', sys === 'clix');
   document.getElementById('nav-accounting').style.display = sys === 'accounting' ? '' : 'none';
   document.getElementById('nav-store').style.display = sys === 'store' ? '' : 'none';
+  document.getElementById('nav-clix').style.display = sys === 'clix' ? '' : 'none';
   updateWANavVisibility();
   document.getElementById('sidebar-title').textContent = 'Tasksup';
-  document.getElementById('sidebar-sub').textContent = sys === 'accounting' ? 'نظام إدارة العملاء والمالية' : 'إدارة الطلبات والمبيعات';
+  document.getElementById('sidebar-sub').textContent = sys === 'accounting' ? 'نظام إدارة العملاء والمالية' : sys === 'clix' ? 'إدارة اشتراكات Clix' : 'إدارة الطلبات والمبيعات';
 
   updateBottomNav(sys);
   closeSidebar();
@@ -5026,7 +5213,7 @@ async function switchSystem(sys) {
   const client = auth.clients?.find(c => c.id === sess.clientId);
   if (client) {
     const accessible = getAccessibleAccounts(client, sess);
-    const targetType = sys === 'store' ? 'store' : 'services';
+    const targetType = sys === 'store' ? 'store' : sys === 'clix' ? 'clix' : 'services';
     const currentAcc = client.accounts.find(a => a.id === sess.currentAccountId);
     if (currentAcc?.type !== targetType) {
       const targetAcc = accessible.find(a => a.type === targetType);
@@ -5034,24 +5221,24 @@ async function switchSystem(sys) {
         sess.currentAccountId = targetAcc.id;
         setSession(sess);
         await loadCurrentAccount();
+        const label = targetAcc.type==='store' ? '🛒 متجر إلكتروني' : targetAcc.type==='clix' ? '🎮 Clix' : '💼 خدمات تسويقية';
+        const icon  = targetAcc.type==='store' ? '🛒' : targetAcc.type==='clix' ? '🎮' : '💼';
         document.getElementById('sidebar-acc-name').textContent = targetAcc.name;
-        document.getElementById('sidebar-acc-type').textContent = targetAcc.type==='store' ? '🛒 متجر إلكتروني' : '💼 خدمات تسويقية';
+        document.getElementById('sidebar-acc-type').textContent = label;
         document.getElementById('ctx-acc-name').textContent = targetAcc.name;
-        document.getElementById('ctx-acc-type').textContent = targetAcc.type==='store' ? '🛒 متجر إلكتروني' : '💼 خدمات تسويقية';
-        document.getElementById('ctx-icon').textContent = targetAcc.type==='store' ? '🛒' : '💼';
+        document.getElementById('ctx-acc-type').textContent = label;
+        document.getElementById('ctx-icon').textContent = icon;
         document.getElementById('mobile-acc-name').textContent = targetAcc.name;
       }
     }
   }
 
   if (sys === 'accounting') showPage('dashboard');
+  else if (sys === 'clix') showPage('clix-orders');
   else showPage('store-dashboard');
 }
 
 function updateBottomNav(sys) {
-  const acItems = ['dashboard','clients','payments-due','expenses','services'];
-  const stItems = ['store-dashboard','store-orders','store-analysis','store-products','store-profit'];
-  // Remove all existing bottom nav items and rebuild
   const inner = document.querySelector('.bottom-nav-inner');
   if (sys === 'accounting') {
     inner.innerHTML = `
@@ -5060,6 +5247,11 @@ function updateBottomNav(sys) {
       <button class="bottom-nav-item" id="bn-payments-due" onclick="showPage('payments-due')"><span class="bni">🔔</span><span>الدفعات</span><span class="bnbadge" id="bn-due-badge" style="display:none">0</span></button>
       <button class="bottom-nav-item" id="bn-expenses" onclick="showPage('expenses')"><span class="bni">💸</span><span>المصاريف</span></button>
       <button class="bottom-nav-item" id="bn-services" onclick="showPage('services')"><span class="bni">⚙️</span><span>الخدمات</span></button>
+    `;
+  } else if (sys === 'clix') {
+    inner.innerHTML = `
+      <button class="bottom-nav-item" id="bn-clix-orders" onclick="showPage('clix-orders')"><span class="bni">🎮</span><span>الطلبات</span></button>
+      <button class="bottom-nav-item" onclick="openAddClixOrderModal()" style="color:var(--primary)"><span class="bni" style="background:var(--primary);color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-top:-8px;">＋</span><span>جديد</span></button>
     `;
   } else {
     const waBtn = isWAEnabled() ? `<button class="bottom-nav-item" id="bn-wa-broadcast" onclick="showPage('wa-broadcast')"><span class="bni">📱</span><span>واتساب</span></button>` : '';
@@ -5590,6 +5782,170 @@ function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   return d.toLocaleDateString('ar-JO', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// ========== CLIX SYSTEM ==========
+
+let clixCurrentTab = 'pending';
+let clixPayFilter  = 'all';
+
+function setClixTab(tab) {
+  clixCurrentTab = tab;
+  document.getElementById('clix-tab-pending').classList.toggle('active', tab === 'pending');
+  document.getElementById('clix-tab-delivered').classList.toggle('active', tab === 'delivered');
+  const pf = document.getElementById('clix-paid-filter');
+  if (pf) pf.style.display = tab === 'delivered' ? 'flex' : 'none';
+  renderClixOrders();
+}
+
+function setClixPayFilter(f) {
+  clixPayFilter = f;
+  ['all','paid','unpaid'].forEach(k => {
+    const el = document.getElementById('clix-pay-' + k);
+    if (el) el.classList.toggle('active', k === f);
+  });
+  renderClixOrders();
+}
+
+function openAddClixOrderModal() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('cx-date').value = today;
+  ['cx-subscription-id','cx-subscriber-name','cx-subscriber-phone','cx-game-name',
+   'cx-amount','cx-email','cx-password','cx-subscriber-time','cx-sales-time'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('cx-device-type').value = '';
+  document.getElementById('cx-payment-method').value = '';
+  openModal('modal-add-clix-order');
+}
+
+function addClixOrder() {
+  const subscriberName = document.getElementById('cx-subscriber-name').value.trim();
+  const gameName       = document.getElementById('cx-game-name').value.trim();
+  if (!subscriberName) return alert('أدخل اسم المشترك');
+  if (!gameName)       return alert('أدخل اسم اللعبة أو الاشتراك');
+  const now = new Date().toISOString();
+  const order = {
+    id: genId(),
+    date:                 document.getElementById('cx-date').value || new Date().toISOString().split('T')[0],
+    subscriptionId:       document.getElementById('cx-subscription-id').value.trim(),
+    subscriberName,
+    subscriberPhone:      document.getElementById('cx-subscriber-phone').value.trim(),
+    gameName,
+    deviceType:           document.getElementById('cx-device-type').value,
+    amount:               parseFloat(document.getElementById('cx-amount').value) || 0,
+    paymentMethod:        document.getElementById('cx-payment-method').value,
+    email:                document.getElementById('cx-email').value.trim(),
+    password:             document.getElementById('cx-password').value.trim(),
+    subscriberAvailableTime: document.getElementById('cx-subscriber-time').value,
+    salesSubmitTime:      document.getElementById('cx-sales-time').value,
+    deliveryTime:         '',
+    status:               'pending',
+    paid:                 false,
+    createdAt:            now
+  };
+  if (!db.clixOrders) db.clixOrders = [];
+  db.clixOrders.unshift(order);
+  saveDB();
+  closeModal('modal-add-clix-order');
+  renderClixOrders();
+  showToast && showToast('تم حفظ الطلب بنجاح ✅');
+}
+
+function markClixDelivered(id) {
+  const o = (db.clixOrders||[]).find(x => x.id === id);
+  if (!o) return;
+  o.status = 'delivered';
+  o.deliveryTime = new Date().toISOString();
+  saveDB();
+  renderClixOrders();
+  showToast && showToast('تم نقل الطلب إلى تم الاستلام ✅');
+}
+
+function toggleClixPaid(id) {
+  const o = (db.clixOrders||[]).find(x => x.id === id);
+  if (!o) return;
+  o.paid = !o.paid;
+  saveDB();
+  renderClixOrders();
+}
+
+function deleteClixOrder(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
+  db.clixOrders = (db.clixOrders||[]).filter(x => x.id !== id);
+  saveDB();
+  renderClixOrders();
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('ar-JO', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+
+function renderClixOrders() {
+  const el = document.getElementById('clix-orders-list');
+  if (!el) return;
+  const q = (document.getElementById('clix-search')?.value || '').toLowerCase();
+  let orders = [...(db.clixOrders||[])].filter(o => o.status === clixCurrentTab);
+  if (clixCurrentTab === 'delivered' && clixPayFilter !== 'all') {
+    orders = orders.filter(o => clixPayFilter === 'paid' ? o.paid : !o.paid);
+  }
+  if (q) orders = orders.filter(o =>
+    (o.subscriberName||'').toLowerCase().includes(q) ||
+    (o.gameName||'').toLowerCase().includes(q) ||
+    (o.deviceType||'').toLowerCase().includes(q) ||
+    (o.subscriptionId||'').toLowerCase().includes(q)
+  );
+  orders.sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date));
+
+  if (!orders.length) {
+    el.innerHTML = `<div class="empty"><div class="icon">🎮</div>
+      <h4>${q ? 'لا نتائج' : clixCurrentTab === 'pending' ? 'لا توجد طلبات معلقة' : 'لا توجد طلبات مكتملة'}</h4>
+      <p>${q ? 'جرب بحثاً آخر' : clixCurrentTab === 'pending' ? 'أضف طلباً جديداً بالضغط على ＋' : 'ستظهر الطلبات المكتملة هنا'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = orders.map(o => `
+    <div class="clix-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+          <div style="width:42px;height:42px;border-radius:10px;background:#fce7f3;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🎮</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:15px;">${o.subscriberName}</div>
+            <div style="font-size:12px;color:var(--text-muted);">${o.gameName}${o.deviceType ? ' • ' + o.deviceType : ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
+          <span class="clix-badge-${o.status === 'pending' ? 'pending' : 'delivered'}">${o.status === 'pending' ? '⏳ معلق' : '✅ تم الاستلام'}</span>
+          ${o.status === 'delivered' ? `<span class="clix-badge-${o.paid ? 'paid' : 'unpaid'}" onclick="toggleClixPaid('${o.id}')" style="cursor:pointer;" title="اضغط للتبديل">${o.paid ? '💙 مدفوع' : '🔴 غير مدفوع'}</span>` : ''}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px 14px;margin-bottom:10px;">
+        ${o.subscriberPhone ? `<div class="clix-field">📱 الرقم: <strong>${o.subscriberPhone}</strong></div>` : ''}
+        ${o.date ? `<div class="clix-field">📅 التاريخ: <strong>${formatDate(o.date)}</strong></div>` : ''}
+        ${o.amount ? `<div class="clix-field">💵 المبلغ: <strong>${o.amount.toLocaleString()} ${o.paymentMethod ? '('+o.paymentMethod+')' : ''}</strong></div>` : ''}
+        ${o.subscriptionId ? `<div class="clix-field">🔢 رقم الاشتراك: <strong dir="ltr">${o.subscriptionId}</strong></div>` : ''}
+      </div>
+
+      ${(o.email || o.password) ? `<div style="background:#f8fafc;border-radius:8px;padding:8px 10px;margin-bottom:8px;display:flex;gap:14px;flex-wrap:wrap;">
+        ${o.email ? `<div class="clix-field">📧 الإيميل: <strong dir="ltr" style="user-select:all;">${o.email}</strong></div>` : ''}
+        ${o.password ? `<div class="clix-field">🔐 كلمة السر: <strong dir="ltr" style="user-select:all;">${o.password}</strong></div>` : ''}
+      </div>` : ''}
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px;margin-bottom:10px;">
+        ${o.subscriberAvailableTime ? `<div class="clix-field">⏰ وقت المشترك عند الجهاز: <strong>${fmtDateTime(o.subscriberAvailableTime)}</strong></div>` : ''}
+        ${o.salesSubmitTime ? `<div class="clix-field">📤 وقت رفع المبيعات: <strong>${fmtDateTime(o.salesSubmitTime)}</strong></div>` : ''}
+        ${o.deliveryTime ? `<div class="clix-field">📦 وقت التسليم: <strong>${fmtDateTime(o.deliveryTime)}</strong></div>` : ''}
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:6px;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
+        ${o.status === 'pending' ? `<button class="btn btn-primary btn-sm" onclick="markClixDelivered('${o.id}')">✅ تم الاستلام</button>` : ''}
+        <button class="btn-icon" onclick="deleteClixOrder('${o.id}')" title="حذف">🗑</button>
+      </div>
+    </div>`).join('');
 }
 
 // ========== LOYALTY SYSTEM ==========
