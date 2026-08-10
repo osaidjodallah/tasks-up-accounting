@@ -3320,10 +3320,10 @@ function applyPermissions() {
     const client = auth.clients?.find(c=>c.id===sess.clientId);
     const acc = client?.accounts?.find(a=>a.id===sess.currentAccountId);
     const pages = acc?.type==='store'
-      ? { 'store-orders':'orders','store-analysis':'analysis','store-products':'settings','store-profit':'analysis', 'loyalty':'clients', 'wa-broadcast':'whatsapp' }
+      ? { 'store-dashboard':'__owner__', 'settings':'__owner__', 'store-orders':'orders','store-analysis':'analysis','store-products':'settings','store-profit':'analysis', 'loyalty':'clients', 'wa-broadcast':'whatsapp' }
       : acc?.type==='clix'
-      ? { 'clix-orders':'orders' }
-      : { 'clients':'clients','payments-due':'payments', 'expenses':'expenses','services':'settings' };
+      ? { 'clix-orders':'orders', 'settings':'__owner__' }
+      : { 'dashboard':'__owner__', 'invoices':'__owner__', 'settings':'__owner__', 'clients':'clients','payments-due':'payments', 'expenses':'expenses','services':'settings' };
     Object.entries(pages).forEach(([pg,perm]) => {
       const el = document.querySelector(`.nav-item[onclick="showPage('${pg}')"]`);
       if (el) el.style.display = canView(perm) ? '' : 'none';
@@ -4288,6 +4288,20 @@ function genId() { return Date.now().toString(36) + Math.random().toString(36).s
 
 // ========== NAVIGATION ==========
 function showPage(name) {
+  const _sess = getSession();
+  if (_sess?.type === 'employee') {
+    const _auth = loadAuth();
+    const _cl = _auth.clients?.find(c => c.id === _sess.clientId);
+    const _acc = _cl?.accounts?.find(a => a.id === _sess.currentAccountId);
+    const _empPages = _acc?.type==='store'
+      ? { 'store-orders':'orders','store-analysis':'analysis','store-products':'settings','store-profit':'analysis','loyalty':'clients','wa-broadcast':'whatsapp' }
+      : _acc?.type==='clix' ? { 'clix-orders':'orders' }
+      : { 'clients':'clients','payments-due':'payments','expenses':'expenses','services':'settings' };
+    if (!(name in _empPages) || !canView(_empPages[name])) {
+      const _first = Object.entries(_empPages).find(([,p]) => canView(p));
+      name = _first ? _first[0] : name;
+    }
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
@@ -5224,6 +5238,7 @@ async function switchSystem(sys) {
   document.getElementById('sidebar-sub').textContent = sys === 'accounting' ? 'نظام إدارة العملاء والمالية' : sys === 'clix' ? 'إدارة اشتراكات Clix' : 'إدارة الطلبات والمبيعات';
 
   updateBottomNav(sys);
+  applyPermissions();
   closeSidebar();
 
   // If switching to a different type, auto-select matching account
