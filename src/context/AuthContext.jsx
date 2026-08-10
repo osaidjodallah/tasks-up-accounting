@@ -36,25 +36,32 @@ export function AuthProvider({ children }) {
         const storedSess = sessionStorage.getItem('mkt_sess_v2') || localStorage.getItem('mkt_sess_v2');
         let initialSession = null;
         if (storedSess) {
-          initialSession = JSON.parse(storedSess);
-          setSessionState(initialSession);
+          try {
+            initialSession = JSON.parse(storedSess);
+            setSessionState(initialSession);
+          } catch (e) {
+            console.warn('Error parsing stored session:', e);
+          }
         }
 
         // Fetch auth data from supabase
+        let currentAuth = null;
         const remoteAuth = await supabaseGet('mkt_auth_v2');
         if (remoteAuth) {
+          currentAuth = remoteAuth;
           setAuthData(remoteAuth);
           localStorage.setItem('mkt_auth_v2', JSON.stringify(remoteAuth));
         } else {
           const localAuth = localStorage.getItem('mkt_auth_v2');
           if (localAuth) {
-            setAuthData(JSON.parse(localAuth));
+            currentAuth = JSON.parse(localAuth);
+            setAuthData(currentAuth);
           }
         }
 
         // If session exists with currentAccountId, load the account data
         if (initialSession && initialSession.currentAccountId) {
-          await loadAccountData(initialSession.currentAccountId, initialSession);
+          await loadAccountData(initialSession.currentAccountId, initialSession, currentAuth);
         }
       } catch (err) {
         console.error('Initialization error in AuthProvider:', err);
@@ -94,7 +101,7 @@ export function AuthProvider({ children }) {
   };
 
   // Load account data (mkt_data_<accountId>)
-  const loadAccountData = async (accountId, activeSession) => {
+  const loadAccountData = async (accountId, activeSession, overrideAuth) => {
     if (!accountId) {
       setDb(getDefaultDB());
       setCurrentAccount(null);
@@ -102,7 +109,7 @@ export function AuthProvider({ children }) {
     }
 
     const sess = activeSession || session;
-    const auth = authData || JSON.parse(localStorage.getItem('mkt_auth_v2'));
+    const auth = overrideAuth || authData || JSON.parse(localStorage.getItem('mkt_auth_v2') || '{}');
     
     // Find account info
     const client = auth?.clients?.find(c => c.id === sess?.clientId);
