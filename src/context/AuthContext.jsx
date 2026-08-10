@@ -270,6 +270,14 @@ export function AuthProvider({ children }) {
     return getPermission(page) === 'manage';
   };
 
+  const logout = () => {
+    setSessionState(null);
+    setDb(getDefaultDB());
+    setCurrentAccount(null);
+    sessionStorage.removeItem('mkt_sess_v2');
+    localStorage.removeItem('mkt_sess_v2');
+  };
+
   return (
     <AuthContext.Provider value={{
       session,
