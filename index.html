@@ -3327,7 +3327,11 @@ function applyPermissions() {
     Object.entries(pages).forEach(([pg,perm]) => {
       const el = document.querySelector(`.nav-item[onclick="showPage('${pg}')"]`);
       if (el) el.style.display = canView(perm) ? '' : 'none';
+      const bn = document.getElementById('bn-' + pg);
+      if (bn) bn.style.display = canView(perm) ? '' : 'none';
     });
+    const bnHome = document.getElementById('bn-dashboard') || document.getElementById('bn-store-dashboard');
+    if (bnHome) bnHome.style.display = 'none';
     const hasAny = Object.values(pages).some(p=>canManage(p));
     document.getElementById('view-only-banner').style.display = hasAny ? 'none' : '';
   }
@@ -5248,9 +5252,18 @@ async function switchSystem(sys) {
     }
   }
 
-  if (sys === 'accounting') showPage('dashboard');
-  else if (sys === 'clix') showPage('clix-orders');
-  else showPage('store-dashboard');
+  const _sess = getSession();
+  if (_sess?.type === 'employee') {
+    const empPages = sys === 'clix' ? [['clix-orders','orders']]
+      : sys === 'store' ? [['store-orders','orders'],['store-profit','analysis'],['store-products','settings'],['loyalty','clients']]
+      : [['clients','clients'],['payments-due','payments'],['expenses','expenses'],['services','settings']];
+    const first = empPages.find(([,perm]) => canView(perm));
+    showPage(first ? first[0] : (sys==='clix' ? 'clix-orders' : sys==='store' ? 'store-orders' : 'clients'));
+  } else {
+    if (sys === 'accounting') showPage('dashboard');
+    else if (sys === 'clix') showPage('clix-orders');
+    else showPage('store-dashboard');
+  }
 }
 
 function updateBottomNav(sys) {
