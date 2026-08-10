@@ -8,9 +8,9 @@ import Login from './pages/Login';
 import RolePicker from './pages/RolePicker';
 import AccountPicker from './pages/AccountPicker';
 import SuperAdmin from './pages/SuperAdmin';
+import Dashboard from './pages/Dashboard';
 
 // Placeholder Pages (To be implemented in detail next)
-const Dashboard = () => <div><h2>لوحة تحكم الخدمات والمحاسبة</h2><p>تحت التطوير...</p></div>;
 const Clients = () => <div><h2>إدارة العملاء والمشتركين</h2><p>تحت التطوير...</p></div>;
 const PaymentsDue = () => <div><h2>الدفعات المستحقة</h2><p>تحت التطوير...</p></div>;
 const Expenses = () => <div><h2>المصاريف العامة</h2><p>تحت التطوير...</p></div>;

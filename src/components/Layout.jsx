@@ -63,13 +63,13 @@ export default function Layout({ children }) {
     );
   }
 
-  if (!session) return null;
-
   // Don't show layout on special screens
   const isSpecialScreen = ['/login', '/role-picker', '/select-account', '/superadmin'].includes(location.pathname);
   if (isSpecialScreen) {
     return <>{children}</>;
   }
+
+  if (!session) return null;
 
   const getAccountTypeLabel = (type) => {
     if (type === 'store') return '🛒 متجر إلكتروني';
