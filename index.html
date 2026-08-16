@@ -4131,90 +4131,105 @@ function exportProfitExcel() {
 }
 
 // Also export from analysis page
-async function exportAnalysisPDF() {
-  const from = document.getElementById('sa-from')?.value || '';
-  const to   = document.getElementById('sa-to')?.value || '';
-  const regions = ['ضفة','قدس','داخل'].filter(r => document.querySelector(`.sa-region-cb[value="${r}"]`)?.checked);
-  const orders = (db.store?.orders||[]).filter(o => {
-    if (from && o.date < from) return false;
-    if (to && o.date > to) return false;
-    return regions.includes(o.region);
-  });
-  const total = orders.reduce((s,o)=>s+(o.amount||0), 0);
-  const currency = orders[0]?.currency || '';
-  const { clientName, storeName } = getPDFStoreInfo();
-
-  // Group by groupId to show combined orders
-  const grouped = {};
+function buildProductRegionMatrix() {
+  const from       = document.getElementById('sa-from')?.value || '';
+  const to         = document.getElementById('sa-to')?.value   || '';
+  const selRegions = ['ضفة','قدس','داخل'].filter(r => document.querySelector(`.sa-region-cb[value="${r}"]`)?.checked);
+  const orders     = (db.store?.orders||[]).filter(o =>
+    o.status !== 'cancelled' &&
+    (!from || o.date >= from) &&
+    (!to   || o.date <= to)  &&
+    selRegions.includes(o.region)
+  );
+  const map = {}; // { [product]: { [region]: {qty, rev} } }
   orders.forEach(o => {
-    const gid = o.groupId || o.id;
-    if (!grouped[gid]) grouped[gid] = { date: o.date, customer: o.customer, region: o.region, city: o.city, items: [], total: 0, currency: o.currency };
-    grouped[gid].items.push(`${getProductName(o.product)} ×${o.qty||1}`);
-    grouped[gid].total += (o.amount||0);
+    const p = o.product || '—';
+    if (!map[p]) map[p] = {};
+    if (!map[p][o.region]) map[p][o.region] = { qty: 0, rev: 0 };
+    map[p][o.region].qty += (o.qty || 1);
+    map[p][o.region].rev += (o.amount || 0);
   });
-  const rows = Object.values(grouped);
+  const rows = Object.entries(map).map(([name, regions]) => {
+    let tQty = 0, tRev = 0;
+    selRegions.forEach(r => { tQty += regions[r]?.qty||0; tRev += regions[r]?.rev||0; });
+    return { name, regions, tQty, tRev };
+  }).sort((a,b) => b.tRev - a.tRev);
+  const grand = rows.reduce((g,r) => { g.qty += r.tQty; g.rev += r.tRev; return g; }, { qty:0, rev:0 });
+  return { rows, selRegions, from, to, grand };
+}
 
-  const tableRows = rows.map(r => `
-    <tr>
-      <td>${r.date||''}</td>
-      <td>${r.customer||''}</td>
-      <td>${r.items.join('<br>')}</td>
-      <td>${r.region||''}</td>
-      <td>${r.city||''}</td>
-      <td style="font-weight:600;">${r.total.toLocaleString()} ${r.currency||''}</td>
-    </tr>`).join('');
+async function exportAnalysisPDF() {
+  const { rows, selRegions, from, to, grand } = buildProductRegionMatrix();
+  const { clientName, storeName } = getPDFStoreInfo();
+  const th = s => `<th style="padding:7px 10px;border:1px solid #c7d2fe;font-size:11px;">${s}</th>`;
+  const td = (s, bold=false, color='') => `<td style="padding:7px 10px;border:1px solid #e5e7eb;font-size:12px;text-align:center;${bold?'font-weight:700;':''}${color?'color:'+color+';':''}">${s}</td>`;
+  const regionColors = { 'ضفة':'#dbeafe', 'قدس':'#fef3c7', 'داخل':'#d1fae5' };
 
+  const headerCols = selRegions.flatMap(r => [
+    `<th colspan="2" style="padding:7px 10px;border:1px solid #c7d2fe;background:${regionColors[r]};font-size:11px;">${r}</th>`
+  ]);
+  const subCols = selRegions.flatMap(() => [th('العدد'), th('₪')]);
+
+  const dataRows = rows.map((r,i) => `<tr style="background:${i%2?'#f9fafb':'#fff'};">
+    <td style="padding:7px 10px;border:1px solid #e5e7eb;font-weight:600;font-size:12px;">${r.name}</td>
+    ${selRegions.flatMap(reg => [td(r.regions[reg]?.qty||0), td((r.regions[reg]?.rev||0).toLocaleString())]).join('')}
+    ${td(r.tQty, true)} ${td(r.tRev.toLocaleString(), true, '#10b981')}
+  </tr>`).join('');
+
+  const footCols = selRegions.flatMap(reg => {
+    const rQty = rows.reduce((s,r)=>s+(r.regions[reg]?.qty||0),0);
+    const rRev = rows.reduce((s,r)=>s+(r.regions[reg]?.rev||0),0);
+    return [td(rQty,true), td(rRev.toLocaleString(),true,'#6366f1')];
+  }).join('');
+
+  const colspan = 1 + selRegions.length * 2 + 2;
   const html = `
-    <div style="font-family:'Segoe UI',Arial,sans-serif;direction:rtl;padding:24px;background:#fff;color:#111827;">
-      ${pdfHeader('تحليل المبيعات', `المناطق: ${regions.join('، ')}`, storeName, clientName, from, to)}
-      <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
-        ${pdfRow('إجمالي الطلبات', rows.length)}
-        ${pdfRow('إجمالي المبيعات', `${total.toLocaleString()} ${currency}`, true, '#10b981')}
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">
-        <thead>
-          <tr style="background:#6366f1;color:#fff;">
-            <th style="padding:8px;border:1px solid #e5e7eb;">التاريخ</th>
-            <th style="padding:8px;border:1px solid #e5e7eb;">العميل</th>
-            <th style="padding:8px;border:1px solid #e5e7eb;">المنتجات</th>
-            <th style="padding:8px;border:1px solid #e5e7eb;">المنطقة</th>
-            <th style="padding:8px;border:1px solid #e5e7eb;">المدينة</th>
-            <th style="padding:8px;border:1px solid #e5e7eb;">المبلغ</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${tableRows || `<tr><td colspan="6" style="text-align:center;padding:16px;color:#9ca3af;">لا توجد طلبات في هذه الفترة</td></tr>`}
-        </tbody>
-        <tfoot>
-          <tr style="background:#f3f4f6;font-weight:700;">
-            <td colspan="5" style="padding:8px;border:1px solid #e5e7eb;text-align:right;">الإجمالي</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;">${total.toLocaleString()} ${currency}</td>
-          </tr>
-        </tfoot>
-      </table>
-      <div style="text-align:center;margin-top:24px;font-size:10px;color:#9ca3af;">
-        تم التصدير بواسطة Tasksup — ${new Date().toLocaleDateString('ar')}
+    <div style="font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;background:#fff;color:#111827;">
+      ${pdfHeader('تقرير المبيعات بالمنتج والمنطقة', `المناطق: ${selRegions.join('، ')} — بالشيكل ₪`, storeName, clientName, from, to)}
+      <div style="padding:16px 24px;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:#6366f1;color:#fff;">
+              <th style="padding:7px 10px;border:1px solid #c7d2fe;font-size:11px;" rowspan="2">المنتج</th>
+              ${headerCols.join('')}
+              <th colspan="2" style="padding:7px 10px;border:1px solid #c7d2fe;background:#4f46e5;font-size:11px;">الإجمالي</th>
+            </tr>
+            <tr style="background:#818cf8;color:#fff;">${subCols.join('')}${th('العدد')}${th('₪')}</tr>
+          </thead>
+          <tbody>${dataRows || `<tr><td colspan="${colspan}" style="text-align:center;padding:20px;color:#9ca3af;">لا توجد بيانات في هذه الفترة</td></tr>`}</tbody>
+          <tfoot>
+            <tr style="background:#f3f4f6;font-weight:700;">
+              <td style="padding:7px 10px;border:1px solid #e5e7eb;font-weight:700;">الإجمالي الكلي</td>
+              ${footCols}
+              ${td(grand.qty,true)} ${td(grand.rev.toLocaleString(),true,'#10b981')}
+            </tr>
+          </tfoot>
+        </table>
+        <div style="text-align:center;margin-top:20px;font-size:10px;color:#9ca3af;">تم التصدير بواسطة Tasksup — ${new Date().toLocaleDateString('ar')}</div>
       </div>
     </div>`;
 
-  await renderHTMLtoPDF(html, `sales-analysis-${from||'all'}-${to||'now'}.pdf`, 'landscape');
+  await renderHTMLtoPDF(html, `sales-matrix-${from||'all'}-${to||'now'}.pdf`, 'landscape');
 }
 
 function exportAnalysisExcel() {
   if (!window.XLSX) return alert('مكتبة Excel غير محملة بعد');
-  const from = document.getElementById('sa-from')?.value || '';
-  const to   = document.getElementById('sa-to')?.value || '';
-  const regions = ['ضفة','قدس','داخل'].filter(r => document.querySelector(`.sa-region-cb[value="${r}"]`)?.checked);
-  const orders = (db.store?.orders||[]).filter(o => {
-    if (from && o.date < from) return false;
-    if (to && o.date > to) return false;
-    return regions.includes(o.region);
+  const { rows, selRegions, from, to, grand } = buildProductRegionMatrix();
+  const header = ['المنتج', ...selRegions.flatMap(r => [`${r} - عدد`, `${r} - ₪`]), 'إجمالي عدد', 'إجمالي ₪'];
+  const data = [header];
+  rows.forEach(r => {
+    data.push([r.name, ...selRegions.flatMap(reg => [r.regions[reg]?.qty||0, r.regions[reg]?.rev||0]), r.tQty, r.tRev]);
   });
+  data.push(['الإجمالي الكلي', ...selRegions.flatMap(reg => [
+    rows.reduce((s,r)=>s+(r.regions[reg]?.qty||0),0),
+    rows.reduce((s,r)=>s+(r.regions[reg]?.rev||0),0)
+  ]), grand.qty, grand.rev]);
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = header.map((_,i) => ({ wch: i===0 ? 24 : 14 }));
   const wb = XLSX.utils.book_new();
-  const data = [['Date','Customer','Product','Region','City','Amount','Currency','Note']];
-  orders.forEach(o => data.push([o.date,o.customer||'',o.product,o.region||'',o.city||'',o.amount,o.currency||'',o.note||'']));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Sales Analysis');
-  XLSX.writeFile(wb, `sales-analysis-${from}-${to}.xlsx`);
+  wb.Workbook = { Views: [{ RTL: true }] };
+  XLSX.utils.book_append_sheet(wb, ws, 'تقرير المبيعات');
+  XLSX.writeFile(wb, `sales-matrix-${from||'all'}-${to||'now'}.xlsx`);
 }
 
 let editingEmpId = null;
