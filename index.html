@@ -2249,6 +2249,17 @@
   </div>
 </div>
 
+<!-- ======== MODAL: ORDER LOG ======== -->
+<div class="modal-overlay" id="modal-order-log">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header">
+      <h3>📋 سجل التعديلات</h3>
+      <button class="modal-close" onclick="closeModal('modal-order-log')">✕</button>
+    </div>
+    <div class="modal-body" id="order-log-body" style="max-height:420px;overflow-y:auto;"></div>
+  </div>
+</div>
+
 <!-- ======== MODAL: ADD ORDER ======== -->
 <div class="modal-overlay" id="modal-add-order">
   <div class="modal" style="max-width:580px;">
@@ -2299,8 +2310,8 @@
           <button type="button" class="btn btn-sm btn-outline" style="width:100%;" onclick="addOrderItem()">＋ إضافة منتج آخر</button>
         </div>
 
-        <!-- Currency -->
-        <div class="form-grid form-grid-2">
+        <!-- Currency / Note / Status -->
+        <div class="form-grid form-grid-3">
           <div class="form-group">
             <label>العملة</label>
             <select id="order-currency">
@@ -2314,6 +2325,13 @@
           <div class="form-group">
             <label>ملاحظة</label>
             <input type="text" id="order-note" placeholder="اختياري" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>الحالة</label>
+            <select id="order-status">
+              <option value="active">نشط ✅</option>
+              <option value="cancelled">ملغي ❌</option>
+            </select>
           </div>
         </div>
       </div>
@@ -3218,6 +3236,7 @@ async function loadCurrentAccount() {
   if (!db.store) db.store = { products:[], orders:[] };
   if (!db.store.products) db.store.products = [];
   if (!db.store.orders) db.store.orders = [];
+  if (!db.store.orderLogs) db.store.orderLogs = {};
   if (!db.expenseCategories) db.expenseCategories = [];
   if (!db.storeCustomers) db.storeCustomers = [];
   if (!db.loyaltySettings) db.loyaltySettings = { pointsPerDollar: 10, redeemThreshold: 100 };
@@ -5399,6 +5418,7 @@ function populateOrderProductDropdown() { /* legacy - no-op, now using order ite
 // ========== STORE: ORDER ITEMS ==========
 let orderItems = []; // [{ rowId, productName, price, qty }]
 let newProductTargetRow = null;
+let editingGroupId = null;
 
 function buildProductOptions(selectedName) {
   return '<option value="">اختر منتجاً...</option>' +
@@ -5479,6 +5499,16 @@ function updateOrderTotal() {
   if (lbl) lbl.textContent = total > 0 ? `الإجمالي: ${total.toLocaleString()}` : '';
 }
 
+function filterProductSelect(rowId, term) {
+  const sel = document.querySelector(`select[data-row="${rowId}"]`);
+  if (!sel) return;
+  const q = term.trim();
+  Array.from(sel.options).forEach(opt => {
+    if (!opt.value || opt.value === '__new__') { opt.hidden = false; return; }
+    opt.hidden = q.length > 0 && !opt.text.includes(q);
+  });
+}
+
 function renderOrderItems() {
   const el = document.getElementById('order-items-list');
   if (!el) return;
@@ -5488,11 +5518,16 @@ function renderOrderItems() {
     const stockClass = stock <= 0 ? 'color:var(--danger);font-weight:700;' : (stock < item.qty) ? 'color:var(--warning);font-weight:700;' : '';
 
     return `
-    <div style="display:grid;grid-template-columns:1fr 90px 60px auto;gap:6px;align-items:center;">
-      <select data-row="${item.rowId}" onchange="onOrderProductChange('${item.rowId}', this.value)"
-        style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
-        ${buildProductOptions(item.productName)}
-      </select>
+    <div style="display:grid;grid-template-columns:1fr 90px 60px auto;gap:6px;align-items:start;">
+      <div style="display:grid;gap:4px;">
+        <input type="text" placeholder="🔍 ابحث عن منتج..." autocomplete="off"
+          oninput="filterProductSelect('${item.rowId}', this.value)"
+          style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;direction:rtl;">
+        <select data-row="${item.rowId}" onchange="onOrderProductChange('${item.rowId}', this.value)"
+          style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;">
+          ${buildProductOptions(item.productName)}
+        </select>
+      </div>
       <input type="number" data-price-row="${item.rowId}" value="${item.price || ''}"
         placeholder="السعر" oninput="onOrderPriceChange('${item.rowId}', this.value)"
         style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-align:center;" autocomplete="off">
@@ -5501,7 +5536,7 @@ function renderOrderItems() {
         style="padding:8px 6px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-align:center;" autocomplete="off" title="الكمية">
       ${orderItems.length > 1
         ? `<button type="button" onclick="removeOrderItem('${item.rowId}')"
-            style="background:var(--danger-light);color:var(--danger);border:none;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:14px;">✕</button>`
+            style="background:var(--danger-light);color:var(--danger);border:none;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:14px;align-self:start;margin-top:28px;">✕</button>`
         : '<div></div>'}
     </div>
     <div style="display:flex;justify-content:space-between;padding:0 2px;">
@@ -5538,6 +5573,7 @@ function saveNewProductInline() {
 
 // ========== STORE: ORDERS ==========
 function openAddOrderModal() {
+  editingGroupId = null;
   orderItems = [];
   addOrderItem(); // start with one row
   document.getElementById('order-date').value = new Date().toISOString().split('T')[0];
@@ -5546,6 +5582,32 @@ function openAddOrderModal() {
   document.getElementById('order-phone').value = '';
   document.getElementById('order-note').value = '';
   document.getElementById('order-region').value = 'ضفة';
+  document.getElementById('order-status').value = 'active';
+  document.querySelector('#modal-add-order .modal-header h3').textContent = 'إضافة طلب جديد';
+  openModal('modal-add-order');
+}
+
+function openEditOrderModal(groupId) {
+  const group = db.store.orders.filter(o => (o.groupId || o.id) === groupId);
+  if (!group.length) return;
+  const first = group[0];
+  editingGroupId = groupId;
+  orderItems = [];
+  group.forEach(o => {
+    const rowId = 'oi_' + genId();
+    orderItems.push({ rowId, productName: o.product, price: o.price || (o.qty ? o.amount / o.qty : o.amount), qty: o.qty || 1 });
+  });
+  document.getElementById('order-date').value     = first.date || '';
+  document.getElementById('order-region').value   = first.region || 'ضفة';
+  document.getElementById('order-city').value     = first.city || '';
+  document.getElementById('order-customer').value = first.customer || '';
+  document.getElementById('order-phone').value    = first.phone || '';
+  document.getElementById('order-note').value     = first.note || '';
+  document.getElementById('order-currency').value = first.currency || 'ILS';
+  document.getElementById('order-status').value   = first.status || 'active';
+  document.querySelector('#modal-add-order .modal-header h3').textContent = 'تعديل الطلب';
+  renderOrderItems();
+  updateOrderTotal();
   openModal('modal-add-order');
 }
 
@@ -5560,27 +5622,59 @@ function saveOrder() {
   const phone    = document.getElementById('order-phone').value.trim();
   const city     = document.getElementById('order-city').value.trim();
   const note     = document.getElementById('order-note').value.trim();
-  const groupId  = genId(); 
-  
-  validItems.forEach(item => {
-    // Decrement stock
-    const p = db.store.products.find(x => getProductName(x) === item.productName);
-    if (p && typeof p === 'object') {
-      p.stock = (p.stock || 0) - item.qty;
+  const status   = document.getElementById('order-status').value;
+  const editedAt = new Date().toISOString();
+
+  if (editingGroupId) {
+    // Restore old stock before removing
+    const oldOrders = db.store.orders.filter(o => (o.groupId || o.id) === editingGroupId);
+    const first = oldOrders[0] || {};
+
+    // Diff scalar fields
+    const fieldLabels = { customer:'الزبون', phone:'الهاتف', city:'المدينة', region:'المنطقة', date:'التاريخ', note:'الملاحظة', currency:'العملة', status:'الحالة' };
+    const newVals = { customer, phone, city, region, date, note, currency, status };
+    const changes = [];
+    Object.entries(fieldLabels).forEach(([k, label]) => {
+      const o = String(first[k] || ''), n = String(newVals[k] || '');
+      if (o !== n) changes.push({ field: label, old: o, new: n });
+    });
+    // Diff products
+    const oldProds = oldOrders.map(o => `${o.product} ×${o.qty||1} @ ${o.price||o.amount}`).join(' | ');
+    const newProds = validItems.map(i => `${i.productName} ×${i.qty} @ ${i.price}`).join(' | ');
+    if (oldProds !== newProds) changes.push({ field: 'المنتجات', old: oldProds, new: newProds });
+    // Write log entry only if something actually changed
+    if (changes.length > 0) {
+      if (!db.store.orderLogs[editingGroupId]) db.store.orderLogs[editingGroupId] = [];
+      db.store.orderLogs[editingGroupId].push({ at: editedAt, by: getSession()?.name || '؟', changes });
     }
 
-    db.store.orders.push({
-      id: genId(), groupId,
-      product: item.productName,
-      amount: item.price * item.qty,
-      price: item.price, qty: item.qty,
-      currency, date, region, city, customer, phone, note
+    oldOrders.forEach(o => {
+      if (o.status !== 'cancelled') {
+        const p = db.store.products.find(x => getProductName(x) === o.product);
+        if (p && typeof p === 'object') p.stock = (p.stock || 0) + (o.qty || 1);
+      }
     });
-  });
+    db.store.orders = db.store.orders.filter(o => (o.groupId || o.id) !== editingGroupId);
+    validItems.forEach(item => {
+      if (status !== 'cancelled') {
+        const p = db.store.products.find(x => getProductName(x) === item.productName);
+        if (p && typeof p === 'object') p.stock = (p.stock || 0) - item.qty;
+      }
+      db.store.orders.push({ id: genId(), groupId: editingGroupId, product: item.productName, amount: item.price * item.qty, price: item.price, qty: item.qty, currency, date, region, city, customer, phone, note, status, editedAt });
+    });
+    editingGroupId = null;
+  } else {
+    const groupId = genId();
+    validItems.forEach(item => {
+      const p = db.store.products.find(x => getProductName(x) === item.productName);
+      if (p && typeof p === 'object') p.stock = (p.stock || 0) - item.qty;
+      db.store.orders.push({ id: genId(), groupId, product: item.productName, amount: item.price * item.qty, price: item.price, qty: item.qty, currency, date, region, city, customer, phone, note, status: 'active' });
+    });
+  }
   saveDB();
   closeModal('modal-add-order');
   renderOrders();
-  renderStoreProducts(); // update products list if visible
+  renderStoreProducts();
   if (document.getElementById('page-store-dashboard').classList.contains('active')) renderStoreDashboard();
 }
 
@@ -5602,6 +5696,25 @@ function deleteOrder(groupId) {
 
 function regionClass(r) {
   return r === 'ضفة' ? 'region-dafeh' : r === 'قدس' ? 'region-quds' : 'region-dakhl';
+}
+
+function openOrderLog(groupId) {
+  const log = (db.store.orderLogs?.[groupId] || []).slice().reverse();
+  const body = document.getElementById('order-log-body');
+  if (!body) return;
+  body.innerHTML = log.length ? log.map(entry => `
+    <div style="padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-weight:700;font-size:13px;">👤 ${entry.by}</span>
+        <span style="font-size:12px;color:var(--text-muted);">${new Date(entry.at).toLocaleString('ar-JO')}</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="color:var(--text-muted)"><th style="text-align:right;padding:3px 6px;">الحقل</th><th style="text-align:right;padding:3px 6px;">قبل</th><th style="text-align:right;padding:3px 6px;">بعد</th></tr></thead>
+        <tbody>${entry.changes.map(c => `<tr><td style="padding:3px 6px;font-weight:600;">${c.field}</td><td style="padding:3px 6px;color:var(--danger);">${c.old||'—'}</td><td style="padding:3px 6px;color:var(--success);">${c.new||'—'}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>`).join('')
+  : '<div style="padding:20px;text-align:center;color:var(--text-muted);">لا توجد تعديلات مسجّلة</div>';
+  openModal('modal-order-log');
 }
 
 function renderOrders() {
@@ -5640,19 +5753,22 @@ function renderOrders() {
           📦 ${o.product}${o.qty > 1 ? ` ×${o.qty}` : ''} — <strong>${(o.amount||0).toLocaleString()} ${o.currency}</strong>
         </span>`).join('')
       : '';
+    const isCancelled = first.status === 'cancelled';
     return `
-    <div class="order-card">
+    <div class="order-card" style="${isCancelled ? 'opacity:0.65;' : ''}">
       <div class="order-top">
         <div class="order-avatar" style="font-size:18px;">${multiProduct ? '🛍' : (first.product?.[0] || '📦')}</div>
         <div style="flex:1;">
-          <div class="order-name">${multiProduct ? `${items.length} منتجات` : first.product}</div>
+          <div class="order-name">${multiProduct ? `${items.length} منتجات` : first.product}
+            ${isCancelled ? '<span style="background:#fee2e2;color:#991b1b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;margin-right:6px;">ملغي</span>' : ''}
+          </div>
           <div class="order-meta">
             <span class="badge ${regionClass(first.region)}">${first.region}</span>
             ${first.city ? `<span>🏙 ${first.city}</span>` : ''}
             <span>📅 ${formatDate(first.date)}</span>
           </div>
         </div>
-        <div class="order-amount">+${totalAmt.toLocaleString()} ${first.currency}</div>
+        <div class="order-amount" style="${isCancelled ? 'text-decoration:line-through;color:var(--text-muted);' : ''}">+${totalAmt.toLocaleString()} ${first.currency}</div>
       </div>
       ${multiProduct ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">${productsList}</div>` : ''}
       ${(first.customer||first.phone) ? `<div class="order-meta" style="margin-bottom:4px;">
@@ -5660,7 +5776,10 @@ function renderOrders() {
         ${first.phone ? `<span>📱 ${first.phone}</span>` : ''}
       </div>` : ''}
       ${first.note ? `<div style="font-size:12px;color:var(--text-muted);">📝 ${first.note}</div>` : ''}
-      <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+      ${first.editedAt ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">✏️ عُدِّل: ${new Date(first.editedAt).toLocaleDateString('ar-JO')}</div>` : ''}
+      <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:8px;">
+        ${(db.store.orderLogs?.[groupKey]?.length) ? `<button class="btn-icon" onclick="openOrderLog('${groupKey}')" title="سجل التعديلات">📋</button>` : ''}
+        ${canManage('orders') ? `<button class="btn-icon" onclick="openEditOrderModal('${groupKey}')" title="تعديل">✏️</button>` : ''}
         <button class="btn-icon" onclick="deleteOrder('${groupKey}')" title="حذف">🗑</button>
       </div>
     </div>`;
@@ -5672,7 +5791,7 @@ function renderStoreDashboard() {
   const el = document.getElementById('store-dashboard-date');
   if (el) el.textContent = new Date().toLocaleDateString('ar-JO', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
-  const orders = db.store.orders;
+  const orders = db.store.orders.filter(o => o.status !== 'cancelled');
   const today = new Date(); today.setHours(0,0,0,0);
   const thisMonth = today.getMonth(), thisYear = today.getFullYear();
   const monthOrders = orders.filter(o => { const d = new Date(o.date); return d.getMonth()===thisMonth && d.getFullYear()===thisYear; });
@@ -5752,7 +5871,7 @@ function runStoreAnalysis() {
   if (!from||!to) return alert('حدد الفترة الزمنية');
   const selRegions = new Set([...document.querySelectorAll('.sa-region-cb:checked')].map(c=>c.value));
 
-  const rows = db.store.orders.filter(o => o.date>=from && o.date<=to && selRegions.has(o.region));
+  const rows = db.store.orders.filter(o => o.status !== 'cancelled' && o.date>=from && o.date<=to && selRegions.has(o.region));
   rows.sort((a,b) => new Date(b.date)-new Date(a.date));
 
   const total = rows.reduce((s,o)=>s+o.amount,0);
