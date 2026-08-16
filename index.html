@@ -2618,9 +2618,9 @@ function saveAuth(a) {
   localStorage.setItem('mkt_auth_v2', JSON.stringify(a));
   supabaseSet('mkt_auth_v2', a);
 }
-function getSession() { const s = sessionStorage.getItem('mkt_sess_v2'); return s ? JSON.parse(s) : null; }
-function setSession(s) { sessionStorage.setItem('mkt_sess_v2', JSON.stringify(s)); }
-function clearSession() { sessionStorage.removeItem('mkt_sess_v2'); }
+function getSession() { const s = localStorage.getItem('mkt_sess_v2'); return s ? JSON.parse(s) : null; }
+function setSession(s) { localStorage.setItem('mkt_sess_v2', JSON.stringify(s)); }
+function clearSession() { localStorage.removeItem('mkt_sess_v2'); }
 
 async function syncAuth() {
   const remote = await supabaseGet('mkt_auth_v2');
@@ -3200,6 +3200,8 @@ async function enterMainApp(acc) {
   if (acc?.type === 'store') { currentSystem = 'store'; await switchSystem('store'); }
   else if (acc?.type === 'clix') { currentSystem = 'clix'; await switchSystem('clix'); }
   else { currentSystem = 'accounting'; await switchSystem('accounting'); }
+  const _hashPage = location.hash.slice(1);
+  if (_hashPage && document.getElementById('page-' + _hashPage)) showPage(_hashPage);
 }
 
 async function selectAccount(accId) {
@@ -4345,6 +4347,7 @@ function showPage(name) {
   const bnItem = document.getElementById('bn-' + name);
   if (bnItem) bnItem.classList.add('active');
   closeSidebar();
+  if (location.hash !== '#' + name) location.hash = name;
   window.scrollTo(0, 0);
   refreshPage(name);
 }
@@ -6639,6 +6642,11 @@ function updateWANavVisibility() {
 }
 
 // ========== INIT ==========
+window.addEventListener('hashchange', () => {
+  const _p = location.hash.slice(1);
+  if (_p && document.getElementById('page-' + _p)) showPage(_p);
+});
+
 window.addEventListener('DOMContentLoaded', async () => {
   document.querySelector('[onclick="openModal(\'modal-add-client\')"]')?.setAttribute('onclick', 'openAddClientModal()');
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
