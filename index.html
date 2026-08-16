@@ -5518,10 +5518,14 @@ function filterProductSelect(rowId, term) {
   const sel = document.querySelector(`select[data-row="${rowId}"]`);
   if (!sel) return;
   const q = term.trim();
-  Array.from(sel.options).forEach(opt => {
-    if (!opt.value || opt.value === '__new__') { opt.hidden = false; return; }
-    opt.hidden = q.length > 0 && !opt.text.includes(q);
-  });
+  const selectedName = orderItems.find(i => i.rowId === rowId)?.productName || '';
+  const matched = q ? db.store.products.filter(p => getProductName(p).includes(q)) : db.store.products;
+  sel.innerHTML = '<option value="">اختر منتجاً...</option>' +
+    matched.map(p => {
+      const name = getProductName(p);
+      return `<option value="${name}" ${name === selectedName ? 'selected' : ''}>${name}</option>`;
+    }).join('') +
+    '<option value="__new__">＋ منتج جديد...</option>';
 }
 
 function renderOrderItems() {
