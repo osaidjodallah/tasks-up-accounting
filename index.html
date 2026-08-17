@@ -552,7 +552,7 @@
 <body>
 
 <!-- ===== LOGIN SCREEN ===== -->
-<div id="login-screen">
+<div id="login-screen" style="display:none">
   <div class="auth-card">
     <div class="auth-logo">
       <div class="logo-icon">
@@ -3187,6 +3187,7 @@ function saveRenameAccount() {
 }
 
 async function enterMainApp(acc) {
+  const _savedHash = location.hash.slice(1); // capture before switchSystem() overwrites it
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('account-picker-screen').style.display = 'none';
   document.getElementById('superadmin-screen').style.display = 'none';
@@ -3200,8 +3201,7 @@ async function enterMainApp(acc) {
   if (acc?.type === 'store') { currentSystem = 'store'; await switchSystem('store'); }
   else if (acc?.type === 'clix') { currentSystem = 'clix'; await switchSystem('clix'); }
   else { currentSystem = 'accounting'; await switchSystem('accounting'); }
-  const _hashPage = location.hash.slice(1);
-  if (_hashPage && document.getElementById('page-' + _hashPage)) showPage(_hashPage);
+  if (_savedHash && document.getElementById('page-' + _savedHash)) showPage(_savedHash);
 }
 
 async function selectAccount(accId) {
