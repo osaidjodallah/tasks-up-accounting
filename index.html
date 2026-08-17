@@ -3201,7 +3201,10 @@ async function enterMainApp(acc) {
   if (acc?.type === 'store') { currentSystem = 'store'; await switchSystem('store'); }
   else if (acc?.type === 'clix') { currentSystem = 'clix'; await switchSystem('clix'); }
   else { currentSystem = 'accounting'; await switchSystem('accounting'); }
-  if (_savedHash && document.getElementById('page-' + _savedHash)) showPage(_savedHash);
+  setTimeout(() => {
+    _booting = false;
+    if (_savedHash && document.getElementById('page-' + _savedHash)) showPage(_savedHash);
+  }, 0);
 }
 
 async function selectAccount(accId) {
@@ -5435,6 +5438,7 @@ function populateOrderProductDropdown() { /* legacy - no-op, now using order ite
 
 // ========== STORE: ORDER ITEMS ==========
 let orderItems = []; // [{ rowId, productName, price, qty }]
+let _booting = false;
 let newProductTargetRow = null;
 let editingGroupId = null;
 
@@ -6643,6 +6647,7 @@ function updateWANavVisibility() {
 
 // ========== INIT ==========
 window.addEventListener('hashchange', () => {
+  if (_booting) return;
   const _p = location.hash.slice(1);
   if (_p && document.getElementById('page-' + _p)) showPage(_p);
 });
@@ -6687,6 +6692,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const auth = loadAuth();
   const client = auth.clients?.find(c => c.id === sess.clientId);
   const acc    = client?.accounts?.find(a => a.id === sess.currentAccountId);
+  _booting = true;
   await enterMainApp(acc);
 });
 </script>
